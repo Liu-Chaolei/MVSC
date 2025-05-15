@@ -57,7 +57,7 @@ def random_flip(images, labels):
     return images, labels
 
 class UVGDataSet(data.Dataset):
-    def __init__(self, root="/data/ssd/liuchaolei/UVG/images/", filelist="/data/ssd/liuchaolei/UVG/originalv.txt", refdir='L12000', testfull=False):
+    def __init__(self, root="/data/ssd/liuchaolei/video_datasets/UVG/sequences/", filelist="/data/ssd/liuchaolei/video_datasets/UVG/originalv.txt", refdir='L12000', testfull=False):
         with open(filelist) as f:
             folders = f.readlines()
         self.ref = []
@@ -142,7 +142,7 @@ class UVGDataSet(data.Dataset):
         return input_images, ref_image, self.refbpp[index], refpsnr, refmsssim
 
 class DataSet(data.Dataset):
-    def __init__(self, path="/data/ssd/liuchaolei/vimeo_septuplet/test.txt", im_height=256, im_width=256):
+    def __init__(self, path="/data/ssd/liuchaolei/video_datasets/vimeo_septuplet/test.txt", im_height=256, im_width=256):
         self.image_input_list, self.image_ref_list = self.get_vimeo(filefolderlist=path)
         self.im_height = im_height
         self.im_width = im_width
@@ -153,7 +153,7 @@ class DataSet(data.Dataset):
         self.mvznois = torch.zeros([out_channel_N, self.im_height // 64, self.im_width // 64])
         print("dataset find image: ", len(self.image_input_list))
 
-    def get_vimeo(self, rootdir="/data/ssd/liuchaolei/vimeo_septuplet/sequences/", filefolderlist="/data/ssd/liuchaolei/vimeo_septuplet/test.txt"):
+    def get_vimeo(self, rootdir="/data/ssd/liuchaolei/video_datasets/vimeo_septuplet/sequences/", filefolderlist="/data/ssd/liuchaolei/video_datasets/vimeo_septuplet/test.txt"):
         with open(filefolderlist) as f:
             data = f.readlines()
             

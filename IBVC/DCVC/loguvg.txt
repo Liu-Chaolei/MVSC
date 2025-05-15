@@ -93,3 +93,81 @@
     }
 }
 
+2025-05-15 08:13:59,590 - INFO] FVC training
+2025-05-15 08:13:59,591 - INFO] config : 
+2025-05-15 08:13:59,592 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 256,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+
+2025-05-15 08:15:56,909 - INFO] FVC training
+2025-05-15 08:15:56,910 - INFO] config : 
+2025-05-15 08:15:56,910 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 256,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+
+2025-05-15 08:17:40,790 - INFO] FVC training
+2025-05-15 08:17:40,790 - INFO] config : 
+2025-05-15 08:17:40,790 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 256,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+
+2025-05-15 08:18:14,341 - INFO] FVC training
+2025-05-15 08:18:14,341 - INFO] config : 
+2025-05-15 08:18:14,341 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 256,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+
+2025-05-15 08:19:32,314 - INFO] FVC training
+2025-05-15 08:19:32,314 - INFO] config : 
+2025-05-15 08:19:32,314 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 256,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+
+2025-05-15 08:21:03,196 - INFO] FVC training
+2025-05-15 08:21:03,196 - INFO] config : 
+2025-05-15 08:21:03,196 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 256,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+
