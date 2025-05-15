@@ -1,0 +1,15 @@
+{
+  "source": "MarketPlace1_1920x1080_60fps_10bit_420",
+  "name": "ssf2020",
+  "description": "Inference (ans)",
+  "results": {
+    "psnr-y": 32.36302185058594,
+    "psnr-u": 39.37879943847656,
+    "psnr-v": 40.28614044189453,
+    "psnr-yuv": 34.85283660888672,
+    "ms-ssim-rgb": 0.8964685201644897,
+    "mse-rgb": 764.9083862304688,
+    "psnr-rgb": 31.36711883544922,
+    "bitrate": 7331.7984
+  }
+}

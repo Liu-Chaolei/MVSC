@@ -1,0 +1,95 @@
+2025-04-25 06:11:33,556 - INFO] FVC training
+2025-04-25 06:11:33,556 - INFO] config : 
+2025-04-25 06:11:33,557 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 256,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+
+2025-04-25 06:41:52,540 - INFO] FVC training
+2025-04-25 06:41:52,541 - INFO] config : 
+2025-04-25 06:41:52,541 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 256,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+
+2025-04-25 06:42:21,349 - INFO] FVC training
+2025-04-25 06:42:21,349 - INFO] config : 
+2025-04-25 06:42:21,349 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 256,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+
+2025-04-25 06:42:53,854 - INFO] FVC training
+2025-04-25 06:42:53,855 - INFO] config : 
+2025-04-25 06:42:53,856 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 256,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+
+2025-04-25 06:45:07,487 - INFO] FVC training
+2025-04-25 06:45:07,487 - INFO] config : 
+2025-04-25 06:45:07,487 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 256,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+
+2025-04-25 06:49:21,289 - INFO] FVC training
+2025-04-25 06:49:21,289 - INFO] config : 
+2025-04-25 06:49:21,289 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 256,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+
+2025-04-25 08:01:44,468 - INFO] global step 0 : 
+
+2025-04-25 08:01:44,470 - INFO] UVGdataset : average bpp : 5.894711, average psnr : 8.664720, average msssim: 0.336311
+
+2025-04-25 08:15:09,267 - INFO] FVC training
+2025-04-25 08:15:09,268 - INFO] config : 
+2025-04-25 08:15:09,268 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 256,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+

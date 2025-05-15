@@ -1,0 +1,43 @@
+# Model Configuration
+model:
+  model_path: "THUDM/CogView4-6B"  # Path to the pre-trained model
+  model_name: "cogview4-6b"        # Model name (options: "cogview4-6b")
+  model_type: "t2i"                # Model type (text-to-image)
+  training_type: "lora"            # Training type
+
+# Output Configuration
+output:
+  output_dir: "/path/to/output"    # Directory to save outputs
+  report_to: "tensorboard"         # Logging framework
+
+# Data Configuration
+data:
+  data_root: "/path/to/data"       # Path to training data
+
+# Training Configuration
+training:
+  seed: 42                         # Random seed for reproducibility
+  train_epochs: 1                  # Number of training epochs
+  batch_size: 1                    # Batch size per GPU
+  gradient_accumulation_steps: 1   # Number of gradient accumulation steps
+  mixed_precision: "bf16"          # Mixed precision mode (options: "no", "fp16", "bf16")
+  learning_rate: 2.0e-5            # Learning rate
+
+  # Note: For CogView4 series models, height and width should be **32N** (multiple of 32)
+  train_resolution: "1024x1024"    # Training resolution (height x width)
+
+# System Configuration
+system:
+  num_workers: 8                   # Number of dataloader workers
+  pin_memory: true                 # Whether to pin memory in dataloader
+  nccl_timeout: 1800               # NCCL timeout in seconds
+
+# Checkpointing Configuration
+checkpoint:
+  checkpointing_steps: 10          # Save checkpoint every x steps
+  checkpointing_limit: 2           # Maximum number of checkpoints to keep
+
+# Validation Configuration
+validation:
+  do_validation: true              # Whether to perform validation
+  validation_steps: 10             # Validate every x steps (should be multiple of checkpointing_steps)

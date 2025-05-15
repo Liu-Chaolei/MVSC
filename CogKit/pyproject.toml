@@ -1,0 +1,108 @@
+[project]
+name = 'cogkit'
+dynamic = ['version']
+description = ''
+readme = 'README.md'
+requires-python = '>=3.10'
+license-files = ["LICENSE"]
+keywords = []
+authors = [{ name = 'ZhipuAI', email = 'opensource@zhipuai.cn' }]
+# TODO: adds maintainers
+# maintainers = []
+dependencies = [
+  "click~=8.1",
+  "diffusers @ git+https://github.com/huggingface/diffusers.git",
+  "imageio-ffmpeg~=0.6.0",
+  "imageio~=2.37",
+  "peft~=0.14.0",
+  "pydantic~=2.10",
+  "sentencepiece==0.2.0",
+  "transformers~=4.49",
+  "wandb~=0.19.8",
+  "fastapi[standard]~=0.115.11",
+  "fastapi_cli~=0.0.7",
+  "openai~=1.67",
+  "pydantic_settings~=2.8.1",
+  "python-dotenv~=1.0",
+  "gradio~=5.23",
+  "python-slugify~=8.0",
+]
+
+[project.optional-dependencies]
+finetune = [
+  "datasets~=3.4",
+  "deepspeed~=0.16.4",
+  "av~=14.2.0",
+]
+
+[project.urls]
+"Repository" = "https://github.com/THUDM/CogKit"
+
+
+[project.scripts]
+cogkit = "cogkit.cli:cli"
+
+
+[build-system]
+requires = [
+  "hatchling",
+  # * uses vcs (e.g. git) to determine the package version
+  "hatch-vcs",
+]
+build-backend = "hatchling.build"
+
+
+[dependency-groups]
+dev = ["mypy~=1.15", "ruff~=0.11.0"]
+
+
+[tool.hatch.version]
+source = 'vcs'
+
+
+[tool.hatch.version.raw-options]
+version_scheme = 'python-simplified-semver'
+local_scheme = 'no-local-version'
+
+
+[tool.hatch.build.hooks.vcs]
+version-file = 'src/cogkit/_version.py'
+
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+
+[tool.pdm]
+distribution = true
+
+
+[tool.pdm.scripts]
+lint.cmd = [
+  "ruff",
+  #
+  "check",
+]
+typecheck.cmd = [
+  "mypy",
+  # options
+  # "--install-types",
+  "--non-interactive",
+  # dirs
+  "src/cogkit",
+  "tests",
+]
+
+
+[tool.ruff]
+# https://github.com/astral-sh/ruff/issues/8627
+exclude = [".git", ".mypy_cache", ".ruff_cache", ".venv", "dist"]
+target-version = "py310"
+line-length = 100
+indent-width = 4
+
+
+[tool.ruff.format]
+line-ending = "lf"
+quote-style = "double"
+indent-style = "space"

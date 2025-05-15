@@ -1,0 +1,347 @@
+2025-04-23 08:33:47,719 - INFO] FVC training
+2025-04-23 08:33:47,719 - INFO] config : 
+2025-04-23 08:33:47,719 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-23 15:59:22,095 - INFO] FVC training
+2025-04-23 15:59:22,096 - INFO] config : 
+2025-04-23 15:59:22,096 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-24 06:45:34,977 - INFO] FVC training
+2025-04-24 06:45:34,977 - INFO] config : 
+2025-04-24 06:45:34,977 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-24 07:17:52,770 - INFO] FVC training
+2025-04-24 07:17:52,771 - INFO] config : 
+2025-04-24 07:17:52,771 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-24 08:03:04,442 - INFO] FVC training
+2025-04-24 08:03:04,442 - INFO] config : 
+2025-04-24 08:03:04,443 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-24 08:35:42,242 - INFO] FVC training
+2025-04-24 08:35:42,243 - INFO] config : 
+2025-04-24 08:35:42,243 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-24 10:42:04,435 - INFO] FVC training
+2025-04-24 10:42:04,436 - INFO] config : 
+2025-04-24 10:42:04,436 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-25 06:03:22,784 - INFO] FVC training
+2025-04-25 06:03:22,784 - INFO] config : 
+2025-04-25 06:03:22,784 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-25 06:04:08,528 - INFO] FVC training
+2025-04-25 06:04:08,528 - INFO] config : 
+2025-04-25 06:04:08,528 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-25 06:05:30,374 - INFO] FVC training
+2025-04-25 06:05:30,374 - INFO] config : 
+2025-04-25 06:05:30,375 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-25 06:09:30,188 - INFO] FVC training
+2025-04-25 06:09:30,189 - INFO] config : 
+2025-04-25 06:09:30,189 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-25 06:55:23,969 - INFO] FVC training
+2025-04-25 06:55:23,969 - INFO] config : 
+2025-04-25 06:55:23,970 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 256,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+
+2025-04-25 09:21:27,943 - INFO] Train Epoch : 00 Loss:	 0.032023	 lr:0.0001
+2025-04-25 11:44:15,973 - INFO] Train Epoch : 01 Loss:	 0.019451	 lr:0.0001
+2025-04-25 14:05:26,835 - INFO] Train Epoch : 02 Loss:	 0.023800	 lr:0.0001
+2025-04-25 16:28:01,146 - INFO] Train Epoch : 03 Loss:	 0.026281	 lr:0.0001
+2025-04-25 18:32:33,062 - INFO] Train Epoch : 04 Loss:	 0.003717	 lr:0.0001
+2025-04-25 20:37:22,386 - INFO] Train Epoch : 05 Loss:	 0.002806	 lr:0.0001
+2025-04-25 22:42:57,216 - INFO] Train Epoch : 06 Loss:	 0.001901	 lr:0.0001
+2025-04-26 00:56:04,027 - INFO] Train Epoch : 07 Loss:	 0.009372	 lr:0.0001
+2025-04-26 03:05:08,944 - INFO] Train Epoch : 08 Loss:	 0.007864	 lr:0.0001
+2025-04-26 05:21:12,120 - INFO] Train Epoch : 09 Loss:	 0.010442	 lr:0.0001
+2025-04-26 05:57:00,375 - INFO] FVC training
+2025-04-26 05:57:00,375 - INFO] config : 
+2025-04-26 05:57:00,376 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 512,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-26 06:02:53,125 - INFO] FVC training
+2025-04-26 06:02:53,126 - INFO] config : 
+2025-04-26 06:02:53,126 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 1024,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-26 06:04:09,853 - INFO] FVC training
+2025-04-26 06:04:09,853 - INFO] config : 
+2025-04-26 06:04:09,853 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-26 06:05:14,111 - INFO] FVC training
+2025-04-26 06:05:14,112 - INFO] config : 
+2025-04-26 06:05:14,112 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-26 06:05:36,965 - INFO] FVC training
+2025-04-26 06:05:36,965 - INFO] config : 
+2025-04-26 06:05:36,965 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-26 06:06:03,479 - INFO] FVC training
+2025-04-26 06:06:03,479 - INFO] config : 
+2025-04-26 06:06:03,479 - INFO] {
+    "tot_epoch": 100,
+    "tot_step": 2500000,
+    "train_lambda": 2048,
+    "lr": {
+        "base": 1e-5,
+        "decay": 0.1,
+        "decay_interval": 2300000
+    }
+}
+2025-04-26 08:22:10,969 - INFO] Train Epoch : 00 Loss:	 0.050938	 lr:0.0001
+2025-04-26 08:27:50,400 - INFO] Train Epoch : 00 Loss:	 0.090377	 lr:0.0001
+2025-04-26 08:41:19,548 - INFO] Train Epoch : 10 Loss:	 0.011742	 lr:0.0001
+2025-04-26 10:47:05,367 - INFO] Train Epoch : 01 Loss:	 0.047072	 lr:0.0001
+2025-04-26 10:47:47,021 - INFO] Train Epoch : 01 Loss:	 0.079243	 lr:0.0001
+2025-04-26 11:56:56,579 - INFO] Train Epoch : 11 Loss:	 0.013694	 lr:0.0001
+2025-04-26 13:12:36,472 - INFO] Train Epoch : 02 Loss:	 0.077000	 lr:0.0001
+2025-04-26 13:18:21,462 - INFO] Train Epoch : 02 Loss:	 0.035576	 lr:0.0001
+2025-04-26 15:20:33,581 - INFO] Train Epoch : 12 Loss:	 0.012165	 lr:0.0001
+2025-04-26 15:31:03,538 - INFO] Train Epoch : 03 Loss:	 0.092334	 lr:0.0001
+2025-04-26 15:52:15,680 - INFO] Train Epoch : 03 Loss:	 0.049622	 lr:0.0001
+2025-04-26 17:29:45,577 - INFO] Train Epoch : 04 Loss:	 0.013585	 lr:0.0001
+2025-04-26 18:06:06,040 - INFO] Train Epoch : 04 Loss:	 0.007715	 lr:0.0001
+2025-04-26 18:46:36,711 - INFO] Train Epoch : 13 Loss:	 0.015177	 lr:0.0001
+2025-04-26 19:32:11,252 - INFO] Train Epoch : 05 Loss:	 0.010167	 lr:0.0001
+2025-04-26 20:19:04,573 - INFO] Train Epoch : 05 Loss:	 0.006525	 lr:0.0001
+2025-04-26 21:40:10,825 - INFO] Train Epoch : 06 Loss:	 0.004444	 lr:0.0001
+2025-04-26 22:11:09,560 - INFO] Train Epoch : 14 Loss:	 0.010068	 lr:0.0001
+2025-04-26 22:20:25,952 - INFO] Train Epoch : 06 Loss:	 0.003935	 lr:0.0001
+2025-04-26 23:43:33,425 - INFO] global step 1211475 : 
+
+2025-04-26 23:43:33,425 - INFO] UVGdataset : average bpp : 0.040482, average psnr : 33.871208, average msssim: 0.946865
+
+2025-04-26 23:56:18,393 - INFO] Train Epoch : 07 Loss:	 0.023856	 lr:0.0001
+2025-04-27 00:30:52,336 - INFO] Train Epoch : 07 Loss:	 0.018310	 lr:0.0001
+2025-04-27 02:19:12,659 - INFO] Train Epoch : 08 Loss:	 0.020455	 lr:0.0001
+2025-04-27 02:44:06,163 - INFO] Train Epoch : 08 Loss:	 0.012596	 lr:0.0001
+2025-04-27 03:12:48,017 - INFO] Train Epoch : 15 Loss:	 0.013187	 lr:0.0001
+2025-04-27 04:38:02,521 - INFO] Train Epoch : 09 Loss:	 0.025940	 lr:0.0001
+2025-04-27 05:00:45,121 - INFO] Train Epoch : 09 Loss:	 0.011856	 lr:0.0001
+2025-04-27 05:05:58,001 - INFO] global step 1292240 : 
+
+2025-04-27 05:05:58,002 - INFO] UVGdataset : average bpp : 0.041291, average psnr : 33.630332, average msssim: 0.946555
+
+2025-04-27 08:04:05,398 - INFO] Train Epoch : 10 Loss:	 0.025561	 lr:0.0001
+2025-04-27 08:18:42,737 - INFO] Train Epoch : 10 Loss:	 0.012770	 lr:0.0001
+2025-04-27 08:27:54,678 - INFO] Train Epoch : 16 Loss:	 0.013372	 lr:0.0001
+2025-04-27 10:00:05,058 - INFO] global step 1373005 : 
+
+2025-04-27 10:00:05,066 - INFO] UVGdataset : average bpp : 0.039989, average psnr : 33.752481, average msssim: 0.946568
+
+2025-04-27 11:30:06,095 - INFO] Train Epoch : 11 Loss:	 0.026112	 lr:0.0001
+2025-04-27 11:37:54,800 - INFO] Train Epoch : 11 Loss:	 0.017786	 lr:0.0001
+2025-04-27 13:22:18,994 - INFO] Train Epoch : 17 Loss:	 0.012699	 lr:0.0001
+2025-04-27 14:28:22,132 - INFO] global step 1453770 : 
+
+2025-04-27 14:28:22,132 - INFO] UVGdataset : average bpp : 0.040155, average psnr : 33.826994, average msssim: 0.946339
+
+2025-04-27 14:54:43,882 - INFO] Train Epoch : 12 Loss:	 0.015560	 lr:0.0001
+2025-04-27 14:55:52,692 - INFO] Train Epoch : 12 Loss:	 0.022245	 lr:0.0001
+2025-04-27 17:54:41,531 - INFO] Train Epoch : 18 Loss:	 0.013834	 lr:0.0001
+2025-04-27 18:14:57,911 - INFO] Train Epoch : 13 Loss:	 0.028633	 lr:0.0001
+2025-04-27 18:15:18,617 - INFO] Train Epoch : 13 Loss:	 0.018409	 lr:0.0001
+2025-04-27 21:06:56,092 - INFO] global step 1534535 : 
+
+2025-04-27 21:06:56,093 - INFO] UVGdataset : average bpp : 0.040464, average psnr : 33.636406, average msssim: 0.945283
+
+2025-04-27 21:28:04,461 - INFO] Train Epoch : 14 Loss:	 0.017441	 lr:0.0001
+2025-04-27 21:32:28,464 - INFO] Train Epoch : 14 Loss:	 0.020461	 lr:0.0001
+2025-04-28 00:50:26,353 - INFO] global step 1211475 : 
+
+2025-04-28 00:50:26,355 - INFO] UVGdataset : average bpp : 0.058327, average psnr : 35.358042, average msssim: 0.957514
+
+2025-04-28 00:55:11,246 - INFO] global step 1211475 : 
+
+2025-04-28 00:55:11,246 - INFO] UVGdataset : average bpp : 0.092049, average psnr : 36.495227, average msssim: 0.964614
+
+2025-04-28 01:06:05,504 - INFO] Train Epoch : 19 Loss:	 0.013945	 lr:0.0001
+2025-04-28 03:04:59,049 - INFO] global step 1615300 : 
+
+2025-04-28 03:04:59,050 - INFO] UVGdataset : average bpp : 0.039901, average psnr : 33.922511, average msssim: 0.946394
+
+2025-04-28 04:25:55,913 - INFO] Train Epoch : 15 Loss:	 0.015925	 lr:0.0001
+2025-04-28 04:28:33,721 - INFO] Train Epoch : 15 Loss:	 0.025078	 lr:0.0001
+2025-04-28 06:37:34,087 - INFO] Train Epoch : 20 Loss:	 0.011011	 lr:0.0001
+2025-04-28 08:30:32,882 - INFO] global step 1292240 : 
+
+2025-04-28 08:30:32,887 - INFO] UVGdataset : average bpp : 0.059046, average psnr : 35.279082, average msssim: 0.957626
+
+2025-04-28 08:34:44,219 - INFO] global step 1292240 : 
+
+2025-04-28 08:34:44,219 - INFO] UVGdataset : average bpp : 0.090997, average psnr : 36.417914, average msssim: 0.964401
+
+2025-04-28 09:35:13,410 - INFO] global step 1696065 : 
+
+2025-04-28 09:35:13,411 - INFO] UVGdataset : average bpp : 0.042084, average psnr : 33.460711, average msssim: 0.942643
+
+2025-04-28 11:49:37,071 - INFO] Train Epoch : 16 Loss:	 0.022900	 lr:0.0001
+2025-04-28 12:10:56,361 - INFO] Train Epoch : 16 Loss:	 0.015120	 lr:0.0001
+2025-04-28 13:17:47,533 - INFO] Train Epoch : 21 Loss:	 0.013650	 lr:0.0001
+2025-04-28 16:18:04,194 - INFO] global step 1373005 : 
+
+2025-04-28 16:18:04,195 - INFO] UVGdataset : average bpp : 0.092037, average psnr : 36.442786, average msssim: 0.964237
+
+2025-04-28 16:40:58,501 - INFO] global step 1373005 : 
+
+2025-04-28 16:40:58,502 - INFO] UVGdataset : average bpp : 0.058566, average psnr : 35.324769, average msssim: 0.957238
+
+2025-04-28 16:57:09,419 - INFO] global step 1776830 : 
+
+2025-04-28 16:57:09,419 - INFO] UVGdataset : average bpp : 0.040130, average psnr : 33.527313, average msssim: 0.945718
+
+2025-04-28 19:51:53,447 - INFO] Train Epoch : 17 Loss:	 0.015374	 lr:0.0001
+2025-04-28 20:03:06,480 - INFO] Train Epoch : 22 Loss:	 0.009321	 lr:0.0001
+2025-04-28 20:16:32,792 - INFO] Train Epoch : 17 Loss:	 0.024914	 lr:0.0001
+2025-04-28 23:51:42,034 - INFO] global step 1857595 : 
+
+2025-04-28 23:51:42,037 - INFO] UVGdataset : average bpp : 0.040781, average psnr : 33.873151, average msssim: 0.947456
+
+2025-04-29 00:04:46,655 - INFO] global step 1453770 : 
+
+2025-04-29 00:04:46,659 - INFO] UVGdataset : average bpp : 0.060968, average psnr : 35.263773, average msssim: 0.957919
+
+2025-04-29 00:08:26,895 - INFO] global step 1453770 : 
+
+2025-04-29 00:08:26,896 - INFO] UVGdataset : average bpp : 0.090148, average psnr : 36.663382, average msssim: 0.964728
+
+2025-04-29 03:00:37,984 - INFO] Train Epoch : 23 Loss:	 0.011625	 lr:0.0001
+2025-04-29 03:06:20,723 - INFO] Train Epoch : 18 Loss:	 0.014333	 lr:0.0001
+2025-04-29 03:54:14,115 - INFO] Train Epoch : 18 Loss:	 0.022116	 lr:0.0001
