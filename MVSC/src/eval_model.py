@@ -27,7 +27,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# python3 -m compressai.utils.video.eval_model pretrained /data/ssd/liuchaolei/tmpvideo /home/liuchaolei/MVSC/MVSC/results -a ssf2020 -q 1 
+# python3 src/eval_model.py pretrained /data/ssd/liuchaolei/tmpvideo /home/liuchaolei/MVSC/MVSC/results -a ssf2020 -q 1 
 
 import argparse
 import json

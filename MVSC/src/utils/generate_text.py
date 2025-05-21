@@ -4,9 +4,9 @@ import argparse
 import numpy as np
 import torch
 from decord import cpu, VideoReader, bridge
-from modelscope import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
-MODEL_PATH = "ZhipuAI/cogvlm2-llama3-caption"
+MODEL_PATH = "THUDM/cogvlm2-llama3-caption"
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 TORCH_TYPE = torch.bfloat16 if torch.cuda.is_available() and torch.cuda.get_device_capability()[
@@ -90,7 +90,7 @@ def generate_text(
         "top_k": 1,
         "do_sample": False,
         "top_p": 0.1,
-        "temperature": temperature
+        "temperature": temperature,
     }
     with torch.no_grad():
         outputs = model.generate(**inputs, **gen_kwargs)
