@@ -28,7 +28,7 @@ def trans(x):
 
 def calculate_lpips(videos1, videos2, device, only_final=False):
     # image should be RGB, IMPORTANT: normalized to [-1,1]
-    print("calculate_lpips...")
+    # print("calculate_lpips...")
 
     assert videos1.shape == videos2.shape
 
@@ -43,7 +43,7 @@ def calculate_lpips(videos1, videos2, device, only_final=False):
 
     loss_fn.to(device)
 
-    for video_num in tqdm(range(videos1.shape[0])):
+    for video_num in range(videos1.shape[0]):
         # get a video
         # video [timestamps, channel, h, w]
         video1 = videos1[video_num]
@@ -64,26 +64,26 @@ def calculate_lpips(videos1, videos2, device, only_final=False):
     
     lpips_results = np.array(lpips_results)
     
-    lpips = []
-    lpips_std = []
+    # lpips = []
+    # lpips_std = []
 
-    if only_final:
+    # if only_final:
 
-        lpips.append(np.mean(lpips_results))
-        lpips_std.append(np.std(lpips_results))
+    #     lpips.append(np.mean(lpips_results))
+    #     lpips_std.append(np.std(lpips_results))
 
-    else:
+    # else:
 
-        for clip_timestamp in range(len(video1)):
-            lpips.append(np.mean(lpips_results[:,clip_timestamp]))
-            lpips_std.append(np.std(lpips_results[:,clip_timestamp]))
+    #     for clip_timestamp in range(len(video1)):
+    #         lpips.append(np.mean(lpips_results[:,clip_timestamp]))
+    #         lpips_std.append(np.std(lpips_results[:,clip_timestamp]))
 
-    result = {
-        "value": lpips,
-        "value_std": lpips_std,
-    }
+    # result = {
+    #     "value": lpips,
+    #     "value_std": lpips_std,
+    # }
 
-    return result
+    return lpips_results
 
 # test code / using example
 

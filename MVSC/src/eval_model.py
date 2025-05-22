@@ -237,7 +237,7 @@ def write_body(fd, shape, out_strings):
 
 @torch.no_grad()
 def eval_model(
-    net: nn.Module, sequence: Path, binpath: Path, t2v_model: str , outputdir: str, num_inference_steps: int, quant_caption: int = 0, keep_binaries: bool = False
+    net: nn.Module, sequence: Path, binpath: Path, t2v_model: str , outputdir: str, num_inference_steps: int, keep_binaries: bool = False
 ) -> Dict[str, Any]:
     org_seq = RawVideoSequence.from_file(str(sequence))
 
@@ -266,7 +266,7 @@ def eval_model(
     all_frames = []  # 可选：内存足够时可预存所有帧
 
     ######################## video caption: caption ########################
-    caption = generate_text(video_path = sequence, quant = quant_caption)
+    caption = generate_text(video_path=sequence, device=device)
 
 
     ######################## video compression: rec_output ########################
@@ -321,9 +321,9 @@ def eval_model(
         writer.release()
     f.close()
 
-    ######################## Video Enhancement: enhance_output ########################
-    enhance_output = os.path.join(outputdir, 'enhance_videos')
-    generate_video(caption, t2v_model, num_frames=num_frames, output_path=enhance_output, image_or_video_path=rec_output, num_inference_steps=num_inference_steps)
+    ######################## Video Enhancement: enhance_output_path ########################
+    enhance_output_path = os.path.join(outputdir, 'enhance_videos')
+    _ = generate_video(caption, t2v_model, num_frames=num_frames, output_path=enhance_output_path, image_or_video_path=rec_output, num_inference_steps=num_inference_steps)
     ###############################################################
 
     seq_results: Dict[str, Any] = {
@@ -395,7 +395,6 @@ def run_inference(
     net: nn.Module,
     t2v_model: str,
     num_inference_steps: int,
-    quant_caption: int,
     outputdir: Path,
     force: bool = False,
     entropy_estimation: bool = False,
@@ -425,7 +424,7 @@ def run_inference(
                 else:
                     sequence_bin = sequence_metrics_path.with_suffix(".bin")
                     metrics = eval_model(
-                        net, filepath, sequence_bin, t2v_model, outputdir, num_inference_steps, quant_caption, args["keep_binaries"]
+                        net, filepath, sequence_bin, t2v_model, outputdir, num_inference_steps, args["keep_binaries"]
                     )
         with sequence_metrics_path.open("wb") as f:
             output = {
@@ -475,7 +474,6 @@ def create_parser() -> argparse.ArgumentParser:
         default="THUDM/CogVideoX1.5-5B",
         help="reconstructed video directory")
     parent_parser.add_argument("--num_inference_steps", type=int, default=50)
-    parent_parser.add_argument("--quant_caption", type=int, default=0)
     parent_parser.add_argument(
         "-a",
         "--architecture",
@@ -616,7 +614,6 @@ def main(args: Any = None) -> None:
             model,
             args.t2v_model,
             args.num_inference_steps,
-            args.quant_caption,
             outputdir,
             trained_net=trained_net,
             description=description,

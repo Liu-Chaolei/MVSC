@@ -70,34 +70,43 @@ def generate_text(
     else:
         raise Exception("Invalid Video Input")
 
-    history = []
-    query = prompt
-    inputs = model.build_conversation_input_ids(
-        tokenizer=tokenizer,
-        query=query,
-        images=[video],
-        history=history,
-        template_version=strategy
-    )
-    inputs = {
-        'input_ids': inputs['input_ids'].unsqueeze(0).to('cuda'),
-        'token_type_ids': inputs['token_type_ids'].unsqueeze(0).to('cuda'),
-        'attention_mask': inputs['attention_mask'].unsqueeze(0).to('cuda'),
-        'images': [[inputs['images'][0].to('cuda').to(TORCH_TYPE)]],
-    }
-    gen_kwargs = {
-        "max_new_tokens": 2048,
-        "pad_token_id": 128002,
-        "top_k": 1,
-        "do_sample": False,
-        "top_p": 0.1,
-        "temperature": temperature,
-    }
-    with torch.no_grad():
-        outputs = model.generate(**inputs, **gen_kwargs)
-        outputs = outputs[:, inputs['input_ids'].shape[1]:]
-        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        return response
+    # change video into [B, C, T, H, W] type
+    tensor_list = [video[key] for key in sorted(video.keys())]
+    videos = torch.stack(tensor_list, dim=2)
+
+    responses=[]
+    batch_size = videos.size(0)
+    for b in range(batch_size):
+        video = videos[b]
+        history = []
+        query = prompt
+        inputs = model.build_conversation_input_ids(
+            tokenizer=tokenizer,
+            query=query,
+            images=[video],
+            history=history,
+            template_version=strategy
+        )
+        inputs = {
+            'input_ids': inputs['input_ids'].unsqueeze(0).to('cuda'),
+            'token_type_ids': inputs['token_type_ids'].unsqueeze(0).to('cuda'),
+            'attention_mask': inputs['attention_mask'].unsqueeze(0).to('cuda'),
+            'images': [[inputs['images'][0].to('cuda').to(TORCH_TYPE)]],
+        }
+        gen_kwargs = {
+            "max_new_tokens": 2048,
+            "pad_token_id": 128002,
+            "top_k": 1,
+            "do_sample": False,
+            "top_p": 0.1,
+            "temperature": temperature,
+        }
+        with torch.no_grad():
+            outputs = model.generate(**inputs, **gen_kwargs)
+            outputs = outputs[:, inputs['input_ids'].shape[1]:]
+            response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        responses.append(response)
+    return responses
 
 def main():
     caption = generate_text(video_path = '/home/liuchaolei/MVSC/MVSC/src/test.mp4')

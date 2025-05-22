@@ -27,6 +27,8 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# python -m debugpy --wait-for-client --listen 5678 -m src.train -d /data/ssd/liuchaolei/video_datasets/vimeo_septuplet
+
 import argparse
 import math
 import random
@@ -43,10 +45,13 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
+import numpy as np
+
 from compressai.datasets import VideoFolder
 from compressai.optimizers import net_aux_optimizer
 from compressai.zoo import video_models
 
+from utils.calculate_lpips import calculate_lpips
 
 def collect_likelihoods_list(likelihoods_list, num_pixels: int):
     bpp_info_dict = defaultdict(int)
@@ -73,10 +78,11 @@ def collect_likelihoods_list(likelihoods_list, num_pixels: int):
 class RateDistortionLoss(nn.Module):
     """Custom rate distortion loss with a Lagrangian parameter."""
 
-    def __init__(self, lmbda=1e-2, return_details: bool = False, bitdepth: int = 8):
+    def __init__(self, lmbda_mse=1e-2, lmbda_lpips=1e-2, return_details: bool = False, bitdepth: int = 8):
         super().__init__()
         self.mse = nn.MSELoss(reduction="none")
-        self.lmbda = lmbda
+        self.lmbda_mse = lmbda_mse
+        self.lmbda_lpips = lmbda_lpips
         self._scaling_functions = lambda x: (2**bitdepth - 1) ** 2 * x
         self.return_details = bool(return_details)
 
@@ -136,7 +142,7 @@ class RateDistortionLoss(nn.Module):
                 "Expected a list of 4D torch.Tensor (or tuples of) as input"
             )
 
-    def forward(self, output, target):
+    def forward(self, output, target, device):
         assert isinstance(target, type(output["x_hat"]))
         assert len(output["x_hat"]) == len(target)
 
@@ -173,12 +179,20 @@ class RateDistortionLoss(nn.Module):
         if self.return_details:
             out.update(bpp_info_dict)  # detailed bpp: per frame, per latent, etc...
 
+        # get lpips loss
+        lpips_results = []
+        for i, (x_hat, x) in enumerate(zip(output["x_hat"], target)):
+            x_hat = x_hat.unsqueeze(0)
+            x = x.unsqueeze(0)
+            lpips_results.append(calculate_lpips(x_hat, x, device))
+        out["lpips_loss"] = np.mean(lpips_results)
+
         # now we either use a fixed lambda or try to balance between 2 lambdas
         # based on a target bpp.
-        lambdas = torch.full_like(bpp_loss, self.lmbda)
+        lmbdas_mse = torch.full_like(bpp_loss, self.lmbda_mse)
 
         bpp_loss = bpp_loss.mean()
-        out["loss"] = (lambdas * scaled_distortions).mean() + bpp_loss
+        out["loss"] = (lmbdas_mse * scaled_distortions).mean() + self.lmbda_lpips * out["lpips_loss"] + bpp_loss
 
         out["distortion"] = scaled_distortions.mean()
         out["bpp_loss"] = bpp_loss
@@ -224,20 +238,35 @@ def configure_optimizers(net, args):
 
 
 def train_one_epoch(
-    model, criterion, train_dataloader, optimizer, aux_optimizer, epoch, clip_max_norm
+    model, criterion, train_dataloader, optimizer, aux_optimizer, epoch, clip_max_norm, t2v_model, num_inference_steps
 ):
     model.train()
     device = next(model.parameters()).device
 
     for i, batch in enumerate(train_dataloader):
-        d = [frames.to(device) for frames in batch]
+        d = [frames.to(device) for frames in batch] # frames[B, C, H, W]
 
         optimizer.zero_grad()
         aux_optimizer.zero_grad()
 
-        out_net = model(d)
 
-        out_criterion = criterion(out_net, d)
+        ######################## video caption: captions(for each batch) ########################
+        captions = generate_text(video = d) # a list, len(captions)=B
+
+        ######################## video compression: rec_output ########################
+        rec_output = model(d) # frames[B, C, H, W]
+
+        ######################## Video Enhancement: enhance_output ########################
+        num_frames = len(d)
+        enhance_outputs = generate_video(captions, t2v_model, num_frames=num_frames, image_or_video=rec_output, num_inference_steps=num_inference_steps) # [B, C, T, H, W]
+
+        split_tensors = torch.chunk(enhance_outputs, chunks=3, dim=2)
+        split_tensors = [t.squeeze(2) for t in split_tensors]
+
+        enhance_output = {str(i): t for i, t in enumerate(split_tensors)} # frames[B, C, H, W]
+
+
+        out_criterion = criterion(enhance_output, d, device)
         out_criterion["loss"].backward()
         if clip_max_norm > 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), clip_max_norm)
@@ -329,8 +358,15 @@ def parse_args(argv):
         help="Dataloaders threads (default: %(default)s)",
     )
     parser.add_argument(
-        "--lambda",
-        dest="lmbda",
+        "--lambda_mse",
+        dest="lmbda_mse",
+        type=float,
+        default=1e-2,
+        help="Bit-rate distortion parameter (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--lambda_lpips",
+        dest="lmbda_lpips",
         type=float,
         default=1e-2,
         help="Bit-rate distortion parameter (default: %(default)s)",
@@ -368,6 +404,12 @@ def parse_args(argv):
         type=float,
         help="gradient clipping max norm (default: %(default)s",
     )
+    parser.add_argument(
+        "--t2v_model",
+        type=str,
+        default="THUDM/CogVideoX1.5-5B",
+        help="reconstructed video directory")
+    parser.add_argument("--num_inference_steps", type=int, default=50)
     parser.add_argument("--checkpoint", type=str, help="Path to a checkpoint")
     args = parser.parse_args(argv)
     return args
@@ -427,7 +469,7 @@ def main(argv):
 
     optimizer, aux_optimizer = configure_optimizers(net, args)
     lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min")
-    criterion = RateDistortionLoss(lmbda=args.lmbda, return_details=True)
+    criterion = RateDistortionLoss(lmbda_mse=args.lmbda_mse, lmbda_lpips=args.lmbda_lpips, return_details=True)
 
     last_epoch = 0
     if args.checkpoint:  # load from previous checkpoint
@@ -450,6 +492,8 @@ def main(argv):
             aux_optimizer,
             epoch,
             args.clip_max_norm,
+            args.t2v_model,
+            args.num_inference_steps
         )
         loss = test_epoch(epoch, test_dataloader, net, criterion)
         lr_scheduler.step(loss)
