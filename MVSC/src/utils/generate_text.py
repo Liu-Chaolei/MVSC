@@ -45,7 +45,7 @@ def generate_text(
     MODEL_PATH: str = "THUDM/cogvlm2-llama3-caption",
     video_path: str = None,
     video = None,
-    device
+    device: str = "cpu"
 ):
     strategy = 'chat'
 
@@ -100,5 +100,9 @@ def generate_text(
         return response
 
 def main():
-    caption = generate_text(video_path = '/home/liuchaolei/MVSC/MVSC/src/test.mp4')
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    caption = generate_text(video_path = '/home/liuchaolei/MVSC/MVSC/src/test.mp4', device=device)
     print(caption)
+
+if __name__=='__main__':
+    main()

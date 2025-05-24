@@ -45,7 +45,7 @@ def generate_text(
     MODEL_PATH: str = "THUDM/cogvlm2-llama3-caption",
     video_path: str = None,
     video = None,
-    device
+    device: str = "cpu"
 ):
     strategy = 'chat'
 

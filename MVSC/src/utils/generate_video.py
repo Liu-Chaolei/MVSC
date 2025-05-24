@@ -189,9 +189,15 @@ def generate_video(
             video=video,  # The path of the video to be used as the background of the video
             num_videos_per_prompt=num_videos_per_prompt,
             num_inference_steps=num_inference_steps,
-            num_frames=num_frames,
             use_dynamic_cfg=True,
             guidance_scale=guidance_scale,
             generator=torch.Generator().manual_seed(seed),  # Set the seed for reproducibility
         ).frames[0]
     export_to_video(video_generate, output_path, fps=fps)
+
+def main():
+    enhance_output_path = os.path.join(outputdir, 'enhance_videos')
+    _ = generate_video(caption, t2v_model, num_frames=num_frames, output_path=enhance_output_path, image_or_video_path=rec_output, num_inference_steps=num_inference_steps)
+
+if __name__=='__main__':
+    main()
