@@ -1,0 +1,240 @@
+"""
+This script demonstrates how to generate a video using the CogVideoX model with the Hugging Face `diffusers` pipeline.
+The script supports different types of video generation, including text-to-video (t2v), image-to-video (i2v),
+and video-to-video (v2v), depending on the input data and different weight.
+
+- text-to-video: THUDM/CogVideoX-5b, THUDM/CogVideoX-2b or THUDM/CogVideoX1.5-5b
+- video-to-video: THUDM/CogVideoX-5b, THUDM/CogVideoX-2b or THUDM/CogVideoX1.5-5b
+- image-to-video: THUDM/CogVideoX-5b-I2V or THUDM/CogVideoX1.5-5b-I2V
+
+Running the Script:
+To run the script, use the following command with appropriate arguments:
+
+```bash
+$ CUDA_VISIBLE_DEVICES=3 python cli_demo.py --prompt "A girl riding a bike." --model_path /data/ssd/liuchaolei/models/CogVideoX-5B --generate_type "t2v"
+CUDA_VISIBLE_DEVICES=3 python cli_demo.py --prompt "MarketPlace." --model_path /data/ssd/liuchaolei/models/CogVideoX-5B --image_or_video_path /data/ssd/liuchaolei/tmpvideo/MarketPlace_1920x1080_60fps_10bit_420.yuv
+```
+
+You can change `pipe.enable_sequential_cpu_offload()` to `pipe.enable_model_cpu_offload()` to speed up inference, but this will use more GPU memory
+
+Additional options are available to specify the model path, guidance scale, number of inference steps, video generation type, and output paths.
+
+"""
+
+import argparse
+import logging
+from typing import Literal, Optional
+
+import torch
+import numpy as np
+from PIL import Image
+import os
+
+from diffusers import (
+    CogVideoXDPMScheduler,
+    CogVideoXImageToVideoPipeline,
+    CogVideoXPipeline,
+    CogVideoXVideoToVideoPipeline,
+)
+from diffusers.utils import export_to_video, load_image, load_video
+
+from loading_utils import load_image_sequence
+from format_utils import toPIL, to_Tensor
+
+logging.basicConfig(level=logging.INFO)
+
+# Recommended resolution for each model (width, height)
+RESOLUTION_MAP = {
+    # cogvideox1.5-*
+    "cogvideox1.5-5b-i2v": (768, 1360),
+    "cogvideox1.5-5b": (768, 1360),
+    # cogvideox-*
+    "cogvideox-5b-i2v": (480, 720),
+    "cogvideox-5b": (480, 720),
+    "cogvideox-2b": (480, 720),
+}
+
+
+def generate_video(
+    prompt: str,
+    dtype: torch.dtype = torch.bfloat16,
+    model_path: str = "THUDM/CogVideoX1.5-5B",
+    lora_path: str = None,
+    lora_rank: int = 128,
+    num_frames: int = 81,
+    width: Optional[int] = None,
+    height: Optional[int] = None,
+    output_path: str = "./output.mp4",
+    image_or_video_path: str = "",
+    image_or_video = None, # a list of image or images(video)
+    num_inference_steps: int = 50,
+    guidance_scale: float = 6.0,
+    num_videos_per_prompt: int = 1,
+    generate_type: str = Literal["t2v", "i2v", "v2v"],  # i2v: image to video, v2v: video to video
+    seed: int = 42,
+    fps: int = 16,
+):
+    """
+    Generates a video based on the given prompt and saves it to the specified path.
+
+    Parameters:
+    - prompt (str): The description of the video to be generated.
+    - model_path (str): The path of the pre-trained model to be used.
+    - lora_path (str): The path of the LoRA weights to be used.
+    - lora_rank (int): The rank of the LoRA weights.
+    - output_path (str): The path where the generated video will be saved.
+    - num_inference_steps (int): Number of steps for the inference process. More steps can result in better quality.
+    - num_frames (int): Number of frames to generate. CogVideoX1.0 generates 49 frames for 6 seconds at 8 fps, while CogVideoX1.5 produces either 81 or 161 frames, corresponding to 5 seconds or 10 seconds at 16 fps.
+    - width (int): The width of the generated video, applicable only for CogVideoX1.5-5B-I2V
+    - height (int): The height of the generated video, applicable only for CogVideoX1.5-5B-I2V
+    - guidance_scale (float): The scale for classifier-free guidance. Higher values can lead to better alignment with the prompt.
+    - num_videos_per_prompt (int): Number of videos to generate per prompt.
+    - dtype (torch.dtype): The data type for computation (default is torch.bfloat16).
+    - generate_type (str): The type of video generation (e.g., 't2v', 'i2v', 'v2v').·
+    - seed (int): The seed for reproducibility.
+    - fps (int): The frames per second for the generated video.
+    """
+
+    # 1.  Load the pre-trained CogVideoX pipeline with the specified precision (bfloat16).
+    # add device_map="balanced" in the from_pretrained function and remove the enable_model_cpu_offload()
+    # function to use Multi GPUs.
+
+    image = None
+    video = None
+
+
+    model_name = model_path.split("/")[-1].lower()
+    desired_resolution = RESOLUTION_MAP[model_name]
+    if width is None or height is None:
+        height, width = desired_resolution
+        logging.info(
+            f"\033[1mUsing default resolution {desired_resolution} for {model_name}\033[0m"
+        )
+    elif (height, width) != desired_resolution:
+        if generate_type == "i2v":
+            # For i2v models, use user-defined width and height
+            logging.warning(
+                f"\033[1;31mThe width({width}) and height({height}) are not recommended for {model_name}. The best resolution is {desired_resolution}.\033[0m"
+            )
+        else:
+            # Otherwise, use the recommended width and height
+            logging.warning(
+                f"\033[1;31m{model_name} is not supported for custom resolution. Setting back to default resolution {desired_resolution}.\033[0m"
+            )
+            height, width = desired_resolution
+
+    if generate_type == "i2v":
+        pipe = CogVideoXImageToVideoPipeline.from_pretrained(model_path, torch_dtype=dtype)
+        image = load_image(image=image_or_video_path)
+    elif generate_type == "t2v":
+        pipe = CogVideoXPipeline.from_pretrained(model_path, torch_dtype=dtype)
+    else:
+        pipe = CogVideoXVideoToVideoPipeline.from_pretrained(model_path, torch_dtype=dtype)
+        if image_or_video_path and image_or_video is None: # load single video from mp4 type or image sequence type
+            if os.path.isfile(image_or_video_path):
+                video = load_video(image_or_video_path)
+            elif os.path.isdir(image_or_video_path):
+                video = load_image_sequence(image_or_video_path)
+            else:
+                raise NotImplementedError(f"Unsupported video input format, only support mp4 or image sequence")
+            videos = video.unsqueeze(0)
+        elif image_or_video and image_or_video_path is None:
+            videos = toPIL(image_or_video) # [B, T]:PIL images, a list of PIL Image
+        else:
+            raise Exception("Invalid Video Input")
+ 
+
+    # If you're using with lora, add this code
+    if lora_path:
+        pipe.load_lora_weights(
+            lora_path, weight_name="pytorch_lora_weights.safetensors", adapter_name="test_1"
+        )
+        pipe.fuse_lora(components=["transformer"], lora_scale=1.0)
+
+    # 2. Set Scheduler.
+    # Can be changed to `CogVideoXDPMScheduler` or `CogVideoXDDIMScheduler`.
+    # We recommend using `CogVideoXDDIMScheduler` for CogVideoX-2B.
+    # using `CogVideoXDPMScheduler` for CogVideoX-5B / CogVideoX-5B-I2V.
+
+    # pipe.scheduler = CogVideoXDDIMScheduler.from_config(pipe.scheduler.config, timestep_spacing="trailing")
+    pipe.scheduler = CogVideoXDPMScheduler.from_config(
+        pipe.scheduler.config, timestep_spacing="trailing"
+    )
+
+    # 3. Enable CPU offload for the model.
+    # turn off if you have multiple GPUs or enough GPU memory(such as H100) and it will cost less time in inference
+    # and enable to("cuda")
+    # pipe.to("cuda")
+
+    # pipe.enable_model_cpu_offload()
+    pipe.enable_sequential_cpu_offload()
+    pipe.vae.enable_slicing()
+    pipe.vae.enable_tiling()
+
+    # 4. Generate the video frames based on the prompt.
+    # `num_frames` is the Number of frames to generate.
+    video_generates = []
+    batch_size = videos.size(0)
+    for b in range(batch_size):
+        if generate_type == "i2v":
+            video_generate = pipe(
+                height=height,
+                width=width,
+                prompt=prompt,
+                image=image,
+                # The path of the image, the resolution of video will be the same as the image for CogVideoX1.5-5B-I2V, otherwise it will be 720 * 480
+                num_videos_per_prompt=num_videos_per_prompt,  # Number of videos to generate per prompt
+                num_inference_steps=num_inference_steps,  # Number of inference steps
+                num_frames=num_frames,  # Number of frames to generate
+                use_dynamic_cfg=True,  # This id used for DPM scheduler, for DDIM scheduler, it should be False
+                guidance_scale=guidance_scale,
+                generator=torch.Generator().manual_seed(seed),  # Set the seed for reproducibility
+            ).frames[0]
+        elif generate_type == "t2v":
+            video_generate = pipe(
+                height=height,
+                width=width,
+                prompt=prompt,
+                num_videos_per_prompt=num_videos_per_prompt,
+                num_inference_steps=num_inference_steps,
+                num_frames=num_frames,
+                use_dynamic_cfg=True,
+                guidance_scale=guidance_scale,
+                generator=torch.Generator().manual_seed(seed),
+            ).frames[0]
+        else:
+            video_generate = pipe(
+                height=height,
+                width=width,
+                prompt=prompt,
+                video=video,  # The path of the video to be used as the background of the video
+                num_videos_per_prompt=num_videos_per_prompt,
+                num_inference_steps=num_inference_steps,
+                use_dynamic_cfg=True,
+                guidance_scale=guidance_scale,
+                generator=torch.Generator().manual_seed(seed),  # Set the seed for reproducibility
+            ).frames[0]
+        video_generates.append(video_generate)
+
+    if output_path:
+        export_to_video(video_generate, output_path, fps=fps)
+
+    video_tensors = to_Tensor(video_generates)
+    return video_tensors
+
+# CUDA_VISIBLE_DEVICES=1 python /home/liuchaolei/MVSC/MVSC/src/utils/generate_video.py
+def main():
+    caption = 'Two basketball players, one in a red and black uniform and the other in a green and yellow uniform, are engaged in a game on an indoor court.Initially, the player in red is ready to shoot, while the player in green is on defense.As the game progresses, the intensity increases with players in red and green uniforms competing, a woman in a grey hoodie watching closely.The scoreboard shows a close game with scores changing from 28-24 to 28-24.The movements of the players are dynamic, with a focus on their athleticism and the competitive atmosphere of the match.'
+    model = '/data/ssd/liuchaolei/models/CogVideoX-5B'
+    enhance_output_path = '/data/ssd/liuchaolei/results/MVSC/enhance_videos_mp4/HEVC_D/1/BasketballPass_416x240_50fps_8bit_420.mp4'
+    video_path = '/home/liuchaolei/MVSC/MVSC/results/rec_videos/HEVC_D/1/BasketballPass_416x240_50fps_8bit_420'
+    num_inference_steps = 50
+    fps = 8
+    parts = video_path.split('_')
+    fps_part = [p for p in parts if 'fps' in p]
+    if fps_part:
+        fps = fps_part[0].replace('fps', '')
+    _ = generate_video(caption, model_path=model, output_path=enhance_output_path, image_or_video_path=video_path, num_inference_steps=num_inference_steps, fps=fps)
+
+if __name__=='__main__':
+    main()

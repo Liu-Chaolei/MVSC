@@ -1,0 +1,10 @@
+model: ssf2020
+dataset: /data/ssd/liuchaolei/UVG
+num_workers: 4
+batch_size: 16
+test_batch_size: 16
+patch_size: 256
+cuda: True
+seed: 1.0
+clip_max_norm: 1.0
+checkpoint: ~
