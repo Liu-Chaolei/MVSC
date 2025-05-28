@@ -52,6 +52,7 @@ from compressai.optimizers import net_aux_optimizer
 from compressai.zoo import video_models
 
 from utils.calculate_lpips import calculate_lpips
+from utils.losses import clip_loss, direction_loss
 
 def collect_likelihoods_list(likelihoods_list, num_pixels: int):
     bpp_info_dict = defaultdict(int)
@@ -83,6 +84,8 @@ class RateDistortionLoss(nn.Module):
         self.mse = nn.MSELoss(reduction="none")
         self.lmbda_mse = lmbda_mse
         self.lmbda_lpips = lmbda_lpips
+        self.lmbda_audio_guidance = lmbda_audio_guidance
+        self.lmbda_direction = lmbda_direction
         self._scaling_functions = lambda x: (2**bitdepth - 1) ** 2 * x
         self.return_details = bool(return_details)
 
@@ -194,6 +197,14 @@ class RateDistortionLoss(nn.Module):
         bpp_loss = bpp_loss.mean()
         out["loss"] = (lmbdas_mse * scaled_distortions).mean() + self.lmbda_lpips * out["lpips_loss"] + bpp_loss
 
+        # get audio loss
+        if self.lmbda_audio_guidance != 0:
+            out["clip_loss"] = self.clip_loss(x_in, audio_embed) * self.lmbda_audio_guidance
+            out["loss"] = out["loss"] + out["clip_loss"]
+        if self.lmbda_direction != 0:
+            out["direction_loss"] = self.direction_loss(x_in, audio_embed) * self.lmbda_direction
+            out["loss"] = out["loss"] + out["direction_loss"]
+
         out["distortion"] = scaled_distortions.mean()
         out["bpp_loss"] = bpp_loss
         return out
@@ -253,20 +264,19 @@ def train_one_epoch(
         ######################## video caption: captions(for each batch) ########################
         captions = generate_text(video = d) # a list, len(captions)=B
 
-        ######################## video compression: rec_output ########################
-        rec_output = model(d) # frames[B, C, H, W]
+        ######################## video compression: rec_frames ########################
+        rec_frames = model(d) # frames[B, C, H, W]
 
-        ######################## Video Enhancement: enhance_output ########################
-        num_frames = len(d)
-        enhance_outputs = generate_video(captions, t2v_model, num_frames=num_frames, image_or_video=rec_output, num_inference_steps=num_inference_steps) # [B, C, T, H, W]
+        ######################## Video Enhancement: enhance_videos ########################
+        enhance_videos = generate_video(captions, t2v_model, image_or_video=rec_frames, num_inference_steps=num_inference_steps) # [B, C, T, H, W]
 
-        split_tensors = torch.chunk(enhance_outputs, chunks=3, dim=2)
+        split_tensors = torch.chunk(enhance_videos, chunks=3, dim=2)
         split_tensors = [t.squeeze(2) for t in split_tensors]
 
-        enhance_output = {str(i): t for i, t in enumerate(split_tensors)} # frames[B, C, H, W]
+        enhance_videos = {str(i): t for i, t in enumerate(split_tensors)} # frames[B, C, H, W]
 
 
-        out_criterion = criterion(enhance_output, d, device)
+        out_criterion = criterion(enhance_videos, d, device)
         out_criterion["loss"].backward()
         if clip_max_norm > 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), clip_max_norm)
@@ -469,7 +479,7 @@ def main(argv):
 
     optimizer, aux_optimizer = configure_optimizers(net, args)
     lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min")
-    criterion = RateDistortionLoss(lmbda_mse=args.lmbda_mse, lmbda_lpips=args.lmbda_lpips, return_details=True)
+    criterion = RateDistortionLoss(lmbda_mse=args.lmbda_mse, lmbda_lpips=args.lmbda_lpips, lmbda_audio_guidance=args.lmbda_audio_guidance, lmbda_direction=args.lmbda_direction, return_details=True)
 
     last_epoch = 0
     if args.checkpoint:  # load from previous checkpoint
