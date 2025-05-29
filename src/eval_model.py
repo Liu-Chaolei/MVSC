@@ -27,7 +27,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# python3 src/eval_model.py pretrained /data/ssd/liuchaolei/tmpvideo /home/liuchaolei/MVSC/MVSC/results -a ssf2020 -q 1 
+# python3 src/eval_model.py pretrained /data/ssd/liuchaolei/tmpvideo /home/liuchaolei/MVSC/results -a ssf2020 -q 1 
 
 import argparse
 import json
@@ -237,7 +237,7 @@ def write_body(fd, shape, out_strings):
 
 @torch.no_grad()
 def eval_model(
-    net: nn.Module, sequence: Path, binpath: Path, t2v_model: str , outputdir: str, num_inference_steps: int, keep_binaries: bool = False
+    net: nn.Module, sequence: Path, binpath: Path, v2t_model: str, v2v_model: str, outputdir: str, num_inference_steps: int, keep_binaries: bool = False
 ) -> Dict[str, Any]:
     org_seq = RawVideoSequence.from_file(str(sequence))
 
@@ -319,7 +319,7 @@ def eval_model(
 
     ######################## Video Enhancement: enhance_output_path, enhance_video [T, C, H, W] ########################
     enhance_output_path = os.path.join(outputdir, 'enhance_videos')
-    enhance_video = generate_video(caption, t2v_model, num_frames=num_frames, output_path=enhance_output_path, image_or_video=x_recs, num_inference_steps=num_inference_steps)
+    enhance_video = generate_video(caption, v2t_model, v2v_model, num_frames=num_frames, output_path=enhance_output_path, image_or_video=x_recs, num_inference_steps=num_inference_steps)
     enhance_video = enhance_video.squeeze(0)
     enhance_video = enhance_video.transpose(0, 1)
     ###############################################################
@@ -408,7 +408,8 @@ def run_inference(
     filepaths,
     inputdir: Path,
     net: nn.Module,
-    t2v_model: str,
+    v2t_model: str
+    v2v_model: str,
     num_inference_steps: int,
     outputdir: Path,
     force: bool = False,
@@ -439,7 +440,7 @@ def run_inference(
                 else:
                     sequence_bin = sequence_metrics_path.with_suffix(".bin")
                     metrics = eval_model(
-                        net, filepath, sequence_bin, t2v_model, outputdir, num_inference_steps, args["keep_binaries"]
+                        net, filepath, sequence_bin, v2t_model, v2v_model, outputdir, num_inference_steps, args["keep_binaries"]
                     )
         with sequence_metrics_path.open("wb") as f:
             output = {
@@ -484,7 +485,12 @@ def create_parser() -> argparse.ArgumentParser:
     parent_parser.add_argument("dataset", type=str, help="sequences directory")
     parent_parser.add_argument("output", type=str, help="output directory")
     parent_parser.add_argument(
-        "--t2v_model",
+        "--v2t_model",
+        type=str,
+        default="THUDM/cogvlm2-llama3-caption",
+        help="reconstructed video directory")
+    parent_parser.add_argument(
+        "--v2v_model",
         type=str,
         default="THUDM/CogVideoX1.5-5B",
         help="reconstructed video directory")
@@ -572,6 +578,15 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
+# def create_parser() -> argparse.ArgumentParser:
+#     parser = argparse.ArgumentParser(description="Example training script.")
+#     parser.add_argument(
+#         "-c", "--config", type=str, required=True, help="yaml config"
+#     )
+#     args = parser.parse_args(argv)
+#     return args
+
+
 def main(args: Any = None) -> None:
     if args is None:
         args = sys.argv[1:]
@@ -627,7 +642,8 @@ def main(args: Any = None) -> None:
             filepaths,
             args.dataset,
             model,
-            args.t2v_model,
+            args.v2t_model,
+            args.v2v_model,
             args.num_inference_steps,
             outputdir,
             trained_net=trained_net,

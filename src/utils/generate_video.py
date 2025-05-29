@@ -137,12 +137,12 @@ def generate_video(
                 video = load_image_sequence(image_or_video_path)
             else:
                 raise NotImplementedError(f"Unsupported video input format, only support mp4 or image sequence")
-            videos = video.unsqueeze(0)
+            videos = [video]
         elif image_or_video and image_or_video_path is None:
             videos = toPIL(image_or_video) # [B, T]:PIL images, a list of PIL Image
         else:
             raise Exception("Invalid Video Input")
- 
+
 
     # If you're using with lora, add this code
     if lora_path:
@@ -174,7 +174,7 @@ def generate_video(
     # 4. Generate the video frames based on the prompt.
     # `num_frames` is the Number of frames to generate.
     video_generates = []
-    batch_size = videos.size(0)
+    batch_size = len(videos[0])
     for b in range(batch_size):
         if generate_type == "i2v":
             video_generate = pipe(
@@ -222,12 +222,12 @@ def generate_video(
     video_tensors = to_Tensor(video_generates)
     return video_tensors
 
-# CUDA_VISIBLE_DEVICES=1 python /home/liuchaolei/MVSC/MVSC/src/utils/generate_video.py
+# CUDA_VISIBLE_DEVICES=5 python /home/liuchaolei/MVSC/src/utils/generate_video.py
 def main():
     caption = 'Two basketball players, one in a red and black uniform and the other in a green and yellow uniform, are engaged in a game on an indoor court.Initially, the player in red is ready to shoot, while the player in green is on defense.As the game progresses, the intensity increases with players in red and green uniforms competing, a woman in a grey hoodie watching closely.The scoreboard shows a close game with scores changing from 28-24 to 28-24.The movements of the players are dynamic, with a focus on their athleticism and the competitive atmosphere of the match.'
     model = '/data/ssd/liuchaolei/models/CogVideoX-5B'
     enhance_output_path = '/data/ssd/liuchaolei/results/MVSC/enhance_videos_mp4/HEVC_D/1/BasketballPass_416x240_50fps_8bit_420.mp4'
-    video_path = '/home/liuchaolei/MVSC/MVSC/results/rec_videos/HEVC_D/1/BasketballPass_416x240_50fps_8bit_420'
+    video_path = '/data/ssd/liuchaolei/results/MVSC/rec_videos/HEVC_D/1/BasketballPass_416x240_50fps_8bit_420'
     num_inference_steps = 50
     fps = 8
     parts = video_path.split('_')

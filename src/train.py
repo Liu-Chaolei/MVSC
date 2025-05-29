@@ -47,12 +47,15 @@ from torchvision import transforms
 
 import numpy as np
 
+import wav2clip
+
 from compressai.datasets import VideoFolder
 from compressai.optimizers import net_aux_optimizer
 from compressai.zoo import video_models
 
 from utils.calculate_lpips import calculate_lpips
 from utils.losses import clip_loss, direction_loss
+from utils.audioclip import AudioCLIP
 
 def collect_likelihoods_list(likelihoods_list, num_pixels: int):
     bpp_info_dict = defaultdict(int)
@@ -249,7 +252,7 @@ def configure_optimizers(net, args):
 
 
 def train_one_epoch(
-    model, criterion, train_dataloader, optimizer, aux_optimizer, epoch, clip_max_norm, t2v_model, num_inference_steps
+    model, criterion, train_dataloader, optimizer, aux_optimizer, epoch, clip_max_norm, v2t_model, v2v_model, audio_emb_model, num_inference_steps
 ):
     model.train()
     device = next(model.parameters()).device
@@ -268,13 +271,21 @@ def train_one_epoch(
         rec_frames = model(d) # frames[B, C, H, W]
 
         ######################## Video Enhancement: enhance_videos ########################
-        enhance_videos = generate_video(captions, t2v_model, image_or_video=rec_frames, num_inference_steps=num_inference_steps) # [B, C, T, H, W]
+        enhance_videos = generate_video(captions, v2t_model, v2v_model, image_or_video=rec_frames, num_inference_steps=num_inference_steps) # [B, C, T, H, W]
 
         split_tensors = torch.chunk(enhance_videos, chunks=3, dim=2)
         split_tensors = [t.squeeze(2) for t in split_tensors]
 
         enhance_videos = {str(i): t for i, t in enumerate(split_tensors)} # frames[B, C, H, W]
 
+        ######################## Get audio_emb ########################
+        if audio_emb_model == 'wav2clip':
+            wav2clip_model = wav2clip.get_model()
+            audio_embed = torch.from_numpy(wav2clip.embed_audio(audio.cpu().numpy().squeeze(), wav2clip_model)).cuda() #(16,512)
+        elif audio_emb_model == 'audioclip':
+            audioclip = AudioCLIP(pretrained=f'TAV/saved_ckpts/AudioCLIP-Full-Training.pt')
+            ((audio_embed, _, _), _), _ = audioclip(audio=audio)
+            audio_embed = audio_embed.cuda() #(16,1024)
 
         out_criterion = criterion(enhance_videos, d, device)
         out_criterion["loss"].backward()
@@ -415,14 +426,28 @@ def parse_args(argv):
         help="gradient clipping max norm (default: %(default)s",
     )
     parser.add_argument(
-        "--t2v_model",
+        "--v2v_model",
         type=str,
         default="THUDM/CogVideoX1.5-5B",
+        help="reconstructed video directory")
+    parser.add_argument(
+        "--v2t_model",
+        type=str,
+        default="THUDM/cogvlm2-llama3-caption",
         help="reconstructed video directory")
     parser.add_argument("--num_inference_steps", type=int, default=50)
     parser.add_argument("--checkpoint", type=str, help="Path to a checkpoint")
     args = parser.parse_args(argv)
     return args
+
+
+# def parse_args()
+#     parser = argparse.ArgumentParser(description="Example training script.")
+#     parser.add_argument(
+#         "-c", "--config", type=str, required=True, help="yaml config"
+#     )
+#     args = parser.parse_args(argv)
+#     return args
 
 
 def main(argv):
@@ -502,7 +527,8 @@ def main(argv):
             aux_optimizer,
             epoch,
             args.clip_max_norm,
-            args.t2v_model,
+            args.v2t_model,
+            args.v2v_model,
             args.num_inference_steps
         )
         loss = test_epoch(epoch, test_dataloader, net, criterion)

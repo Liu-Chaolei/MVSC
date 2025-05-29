@@ -50,7 +50,7 @@ conversation = [
 
 prompt = processor.apply_chat_template(conversation, add_generation_prompt=True)
 
-video_path = '/home/liuchaolei/MVSC/MVSC/src/test.mp4'
+video_path = '/home/liuchaolei/MVSC/src/test.mp4'
 container = av.open(video_path)
 
 # sample uniformly 8 frames from the video, can sample more for longer videos
