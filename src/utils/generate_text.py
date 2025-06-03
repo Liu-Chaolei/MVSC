@@ -108,10 +108,12 @@ def generate_text(
         responses.append(response)
     return responses
 
+# python src/utils/generate_text.py
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     video_path = '/home/liuchaolei/MVSC/src/test.mp4'
-    caption = generate_text(video_path = video_path, device=device)
+    model_path: str = "THUDM/cogvlm2-llama3-caption"
+    caption = generate_text(video_path=video_path, model_path=model_path, device=device)
     print(caption)
 
 if __name__=='__main__':

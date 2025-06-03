@@ -408,7 +408,7 @@ def run_inference(
     filepaths,
     inputdir: Path,
     net: nn.Module,
-    v2t_model: str
+    v2t_model: str,
     v2v_model: str,
     num_inference_steps: int,
     outputdir: Path,

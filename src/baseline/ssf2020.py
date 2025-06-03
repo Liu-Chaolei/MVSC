@@ -27,7 +27,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# python3 src/baseline/ssf2020.py pretrained /data/ssd/liuchaolei/video_datasets/UVG/yuv_crop /data/ssd/liuchaolei/results/MVSC -a ssf2020 -q 1,2,3,4
+# python3 src/baseline/ssf2020.py pretrained /data/ssd/liuchaolei/video_datasets/UVG/yuv_crop /data/ssd/liuchaolei/results/MVSC -a ssf2020 -q 6
 
 import argparse
 import json
@@ -73,9 +73,9 @@ Frame = Union[Tuple[Tensor, Tensor, Tensor], Tuple[Tensor, ...]]
 RAWVIDEO_EXTENSIONS = (".yuv",)  # read raw yuv videos for now
 
 
-def save_frames_as_images(frames, output_dir, idx):
+def save_frames_as_images(frames, outputdir, idx):
     """将重建帧保存为PNG图像序列"""
-    os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(outputdir, exist_ok=True)
     # frame[0]是RGB格式的Tensor [B,C,H,W]
     frames = frames[0].squeeze(0)
     rgb_frame = (
@@ -87,7 +87,7 @@ def save_frames_as_images(frames, output_dir, idx):
         * 255                  # 关键：0-1 → 0-255
     ).astype(np.uint8)         # 转换为8位整数
     cv2.imwrite(
-        f"{output_dir}/{idx:04d}.png",
+        f"{outputdir}/{idx:04d}.png",
         cv2.cvtColor(rgb_frame, cv2.COLOR_RGB2BGR)  # BGR格式保存
     )
 
@@ -256,7 +256,7 @@ def write_body(fd, shape, out_strings):
 
 @torch.no_grad()
 def eval_model(
-    net: nn.Module, sequence: Path, binpath: Path, keep_binaries: bool = False, quality: str = '1'
+    net: nn.Module, sequence: Path, binpath: Path, keep_binaries: bool = False, outputdir: str = '', quality: str = '1'
 ) -> Dict[str, Any]:
     org_seq = RawVideoSequence.from_file(str(sequence))
 
@@ -279,8 +279,8 @@ def eval_model(
     write_uints(f, (num_frames,))
 
     sequence = sequence.name.split('.yuv')[0]
-    output_video_path = '/data/ssd/liuchaolei/results/MVSC/rec_videos/UVG_crop'
-    output_video_subpath = os.path.join(output_video_path, quality, sequence)
+    output_video_path = 'rec_videos/UVG_crop'
+    output_video_subpath = os.path.join(outputdir, output_video_path, quality, sequence)
 
     with tqdm(total=num_frames) as pbar:
         for i in range(num_frames):
@@ -417,7 +417,7 @@ def run_inference(
                 else:
                     sequence_bin = sequence_metrics_path.with_suffix(".bin")
                     metrics = eval_model(
-                        net, filepath, sequence_bin, args["keep_binaries"], quality
+                        net, filepath, sequence_bin, args["keep_binaries"], outputdir, quality
                     )
         with sequence_metrics_path.open("wb") as f:
             output = {
@@ -580,6 +580,12 @@ def main(args: Any = None) -> None:
 
     results = defaultdict(list)
     for run in runs:
+        if args.source == "pretrained":
+            quality = run
+        else:
+            parts = run.split('-')
+            index = parts.index('mse')
+            quality = parts[index + 1]
         if args.verbose:
             sys.stderr.write(log_fmt.format(*opts, run=run))
             sys.stderr.flush()
@@ -602,7 +608,7 @@ def main(args: Any = None) -> None:
             outputdir,
             trained_net=trained_net,
             description=description,
-            quality = run,
+            quality = quality,
             **args_dict,
         )
         results["q"].append(trained_net)

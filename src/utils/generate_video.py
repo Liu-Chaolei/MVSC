@@ -222,13 +222,14 @@ def generate_video(
     video_tensors = to_Tensor(video_generates)
     return video_tensors
 
-# CUDA_VISIBLE_DEVICES=5 python /home/liuchaolei/MVSC/src/utils/generate_video.py
+# CUDA_VISIBLE_DEVICES=0 python src/utils/generate_video.py
 def main():
-    caption = 'Two basketball players, one in a red and black uniform and the other in a green and yellow uniform, are engaged in a game on an indoor court.Initially, the player in red is ready to shoot, while the player in green is on defense.As the game progresses, the intensity increases with players in red and green uniforms competing, a woman in a grey hoodie watching closely.The scoreboard shows a close game with scores changing from 28-24 to 28-24.The movements of the players are dynamic, with a focus on their athleticism and the competitive atmosphere of the match.'
+    caption = 'A woman with blonde hair and green eyes is featured against a black background, her makeup accentuated by smoky eyeshadow and bold red lipstick. She wears simple stud earrings and a black top, exuding confidence and allure.As time passes, her expression shifts to one of serene confidence, with her gaze directed away, suggesting introspection.The lighting softly highlights her features, maintaining a warm ambiance. Her look is consistent, with the addition of subtle pink lipstick, and her hair appears windswept, adding dynamism to her poised demeanor.'
     model = '/data/ssd/liuchaolei/models/CogVideoX-5B'
-    enhance_output_path = '/data/ssd/liuchaolei/results/MVSC/enhance_videos_mp4/HEVC_D/1/BasketballPass_416x240_50fps_8bit_420.mp4'
-    video_path = '/data/ssd/liuchaolei/results/MVSC/rec_videos/HEVC_D/1/BasketballPass_416x240_50fps_8bit_420'
-    num_inference_steps = 50
+    enhance_output_path = '/home/liuchaolei/MVSC/src/Beauty_720x480_120fps_8bit_420.mp4'
+    # video_path = '/data/ssd/liuchaolei/results/MVSC/rec_videos/HEVC_D/1/BasketballPass_416x240_50fps_8bit_420'
+    video_path = '/data/ssd/liuchaolei/results/MVSC/ori_videos_mp4/UVG_crop/Beauty_720x480_120fps_8bit_420.mp4'
+    num_inference_steps = 81
     fps = 8
     parts = video_path.split('_')
     fps_part = [p for p in parts if 'fps' in p]
