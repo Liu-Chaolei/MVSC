@@ -14,8 +14,8 @@ def load_image_sequence(folder_path: str) -> list:
     # 获取文件夹中所有 PNG 文件
     image_files = [f for f in os.listdir(folder_path) if f.lower().endswith('.png')]
     
-    # 按文件名中的数字排序（例如 0000.png, 0001.png）
-    image_files.sort(key=lambda x: int(x.split('.')[0]))  # 提取文件名前缀的数字部分排序
+    # 按文件名中的前缀排序（例如 im000.png, im001.png）
+    image_files.sort(key=lambda x: x.split('.')[0])  # 提取文件名前缀部分排序
     
     # 加载所有图片到列表
     images = []

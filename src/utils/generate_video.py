@@ -104,7 +104,8 @@ def generate_video(
 
 
     model_name = model_path.split("/")[-1].lower()
-    desired_resolution = RESOLUTION_MAP[model_name]
+    # desired_resolution = RESOLUTION_MAP[model_name]
+    desired_resolution = (720, 480)
     if width is None or height is None:
         height, width = desired_resolution
         logging.info(
@@ -174,7 +175,8 @@ def generate_video(
     # 4. Generate the video frames based on the prompt.
     # `num_frames` is the Number of frames to generate.
     video_generates = []
-    batch_size = len(videos[0])
+    batch_size = len(videos)
+    # batch_size = 1
     for b in range(batch_size):
         if generate_type == "i2v":
             video_generate = pipe(
@@ -224,18 +226,21 @@ def generate_video(
 
 # CUDA_VISIBLE_DEVICES=0 python src/utils/generate_video.py
 def main():
-    caption = 'A woman with blonde hair and green eyes is featured against a black background, her makeup accentuated by smoky eyeshadow and bold red lipstick. She wears simple stud earrings and a black top, exuding confidence and allure.As time passes, her expression shifts to one of serene confidence, with her gaze directed away, suggesting introspection.The lighting softly highlights her features, maintaining a warm ambiance. Her look is consistent, with the addition of subtle pink lipstick, and her hair appears windswept, adding dynamism to her poised demeanor.'
+    caption = 'A woman with blonde hair and green eyes is featured against a black background, her makeup accentuated by smoky eyeshadow and bold red lipstick. She wears simple stud earrings and a black top, exuding confidence and allure. As time passes, her expression shifts to one of serene confidence, with her gaze directed away, suggesting introspection. The lighting softly highlights her features, maintaining a warm ambiance. Her look is consistent, with the addition of subtle pink lipstick, and her hair appears windswept, adding dynamism to her poised demeanor.'
     model = '/data/ssd/liuchaolei/models/CogVideoX-5B'
-    enhance_output_path = '/home/liuchaolei/MVSC/src/Beauty_720x480_120fps_8bit_420.mp4'
+    model = "/data/ssd/liuchaolei/models/CogVideoX1.5-5B-I2V"
+    enhance_output_path = '/home/liuchaolei/MVSC/src/i2v.mp4'
     # video_path = '/data/ssd/liuchaolei/results/MVSC/rec_videos/HEVC_D/1/BasketballPass_416x240_50fps_8bit_420'
     video_path = '/data/ssd/liuchaolei/results/MVSC/ori_videos_mp4/UVG_crop/Beauty_720x480_120fps_8bit_420.mp4'
-    num_inference_steps = 81
+    image_path = '/data/ssd/liuchaolei/video_datasets/UVG/sequences/Beauty/im001.png'
+    num_inference_steps = 50
+    generate_type = 'i2v'
     fps = 8
     parts = video_path.split('_')
     fps_part = [p for p in parts if 'fps' in p]
     if fps_part:
-        fps = fps_part[0].replace('fps', '')
-    _ = generate_video(caption, model_path=model, output_path=enhance_output_path, image_or_video_path=video_path, num_inference_steps=num_inference_steps, fps=fps)
+        fps = int(fps_part[0].replace('fps', ''))
+    _ = generate_video(caption, model_path=model, output_path=enhance_output_path, image_or_video_path=image_path, num_inference_steps=num_inference_steps, num_frames=30, generate_type=generate_type, fps=fps, width=720, height=480)
 
 if __name__=='__main__':
     main()

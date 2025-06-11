@@ -414,7 +414,7 @@ def parse_args(argv):
         default=(256, 256),
         help="Size of the patches to be cropped (default: %(default)s)",
     )
-    parser.add_argument("--cuda", action="store_true", help="Use cuda")
+    parser.add_argument("--cuda", type=bool, default=True, help="use cuda")
     parser.add_argument(
         "--save", action="store_true", default=True, help="Save model to disk"
     )

@@ -27,13 +27,14 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# python3 src/eval_model.py pretrained /data/ssd/liuchaolei/tmpvideo /home/liuchaolei/MVSC/results -a ssf2020 -q 1 
+# python3 src/eval_model.py pretrained /data/ssd/liuchaolei/tmpvideo /home/liuchaolei/MVSC/results -a ssf2020 -q 1
 
 import argparse
 import json
 import math
 import struct
 import sys
+import cv2
 
 from collections import defaultdict
 from pathlib import Path
@@ -237,7 +238,7 @@ def write_body(fd, shape, out_strings):
 
 @torch.no_grad()
 def eval_model(
-    net: nn.Module, sequence: Path, binpath: Path, v2t_model: str, v2v_model: str, outputdir: str, num_inference_steps: int, keep_binaries: bool = False
+    net: nn.Module, sequence: Path, binpath: Path, v2t_model: str, v2v_model: str, controlnet_path: str, basenet_path: str, outputdir: str, num_inference_steps: int, keep_binaries: bool = False
 ) -> Dict[str, Any]:
     org_seq = RawVideoSequence.from_file(str(sequence))
 
@@ -266,7 +267,8 @@ def eval_model(
     all_frames = []  # 可选：内存足够时可预存所有帧
 
     ######################## video caption: caption ########################
-    caption = generate_text(video_path=sequence, device=device)
+    video_path = '/data/ssd/liuchaolei/results/MVSC/ori_videos_mp4/UVG/' + sequence.stem +'.mp4'
+    caption = generate_text(model_path=v2t_model, video_path=video_path, device=device)
 
 
     ######################## video compression: rec_output, x_recs ########################
@@ -317,24 +319,44 @@ def eval_model(
     #     writer.release()
     f.close()
 
-    ######################## Video Enhancement: enhance_output_path, enhance_video [T, C, H, W] ########################
-    enhance_output_path = os.path.join(outputdir, 'enhance_videos')
-    enhance_video = generate_video(caption, v2t_model, v2v_model, num_frames=num_frames, output_path=enhance_output_path, image_or_video=x_recs, num_inference_steps=num_inference_steps)
-    enhance_video = enhance_video.squeeze(0)
-    enhance_video = enhance_video.transpose(0, 1)
+    # ######################## Video Enhancement: enhance_output_path, enhance_video [T, C, H, W] ########################
+    # enhance_output_path = os.path.join(outputdir, 'enhance_videos')
+    # enhance_video = generate_video(caption, model_path=v2v_model, output_path=enhance_output_path, image_or_video=x_recs, num_inference_steps=num_inference_steps)
+    # enhance_video = enhance_video.squeeze(0)
+    # enhance_video = enhance_video.transpose(0, 1)
+    # ###############################################################
+
+    ######################## Image Enhancement: enhance_output_path, enhance_image [T, C, H, W] ########################
+    enhance_images = [] # [T, C, H, W]
+    for i in range(len(x_recs)):
+        x_rec = x_recs[i]
+        enhance_output_path = f"{outputdir}/enhance_images/{i:03d}.png"
+        enhance_image = generate_video(prompt=caption, controlnet_path=controlnet_path, basenet_path=basenet_path, output_path=enhance_output_path, image=x_rec, num_inference_steps=num_inference_steps)
+        enhance_images.append(enhance_image)
     ###############################################################
 
     ####################################### calculate metrics #######################################
-    for i in range(enhance_video.shape(0)):
-        enhance_frame = enhance_video[i]
-        metrics = compute_metrics_for_frame(
-            org_seq[i],
-            crop(enhance_frame, padding),
-            device,
-            max_val,
-        )
-        for k, v in metrics.items():
-            results[k].append(v)
+    if enhance_video is not None:
+        for i in range(enhance_video.shape(0)):
+            enhance_frame = enhance_video[i]
+            metrics = compute_metrics_for_frame(
+                org_seq[i],
+                crop(enhance_frame, padding),
+                device,
+                max_val,
+            )
+            for k, v in metrics.items():
+                results[k].append(v)
+    else:
+        for i in range(len(enhance_images)):
+            metrics = compute_metrics_for_frame(
+                org_seq[i],
+                crop(enhance_images[i], padding),
+                device,
+                max_val,
+            )
+            for k, v in metrics.items():
+                results[k].append(v)
     ###############################################################
 
     seq_results: Dict[str, Any] = {
@@ -408,9 +430,6 @@ def run_inference(
     filepaths,
     inputdir: Path,
     net: nn.Module,
-    v2t_model: str,
-    v2v_model: str,
-    num_inference_steps: int,
     outputdir: Path,
     force: bool = False,
     entropy_estimation: bool = False,
@@ -440,7 +459,7 @@ def run_inference(
                 else:
                     sequence_bin = sequence_metrics_path.with_suffix(".bin")
                     metrics = eval_model(
-                        net, filepath, sequence_bin, v2t_model, v2v_model, outputdir, num_inference_steps, args["keep_binaries"]
+                        net, filepath, sequence_bin, args["v2t_model"], args["v2v_model"], args["controlnet_path"], args["basenet_path"], outputdir, args["num_inference_steps"], args["keep_binaries"]
                     )
         with sequence_metrics_path.open("wb") as f:
             output = {
@@ -494,6 +513,16 @@ def create_parser() -> argparse.ArgumentParser:
         type=str,
         default="THUDM/CogVideoX1.5-5B",
         help="reconstructed video directory")
+    parent_parser.add_argument(
+        "--controlnet_path",
+        type=str,
+        default="jasperai/Flux.1-dev-Controlnet-Upscaler",
+        help="reconstructed video directory")
+    parent_parser.add_argument(
+        "--basenet_path",
+        type=str,
+        default="black-forest-labs/FLUX.1-dev",
+        help="reconstructed video directory")
     parent_parser.add_argument("--num_inference_steps", type=int, default=50)
     parent_parser.add_argument(
         "-a",
@@ -506,7 +535,7 @@ def create_parser() -> argparse.ArgumentParser:
     parent_parser.add_argument(
         "-f", "--force", action="store_true", help="overwrite previous runs"
     )
-    parent_parser.add_argument("--cuda", action="store_true", help="use cuda")
+    parent_parser.add_argument("--cuda", type=bool, default=True, help="use cuda")
     parent_parser.add_argument("--half", action="store_true", help="use AMP")
     parent_parser.add_argument(
         "--entropy-estimation",
@@ -642,9 +671,6 @@ def main(args: Any = None) -> None:
             filepaths,
             args.dataset,
             model,
-            args.v2t_model,
-            args.v2v_model,
-            args.num_inference_steps,
             outputdir,
             trained_net=trained_net,
             description=description,

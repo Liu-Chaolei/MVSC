@@ -112,7 +112,7 @@ def generate_text(
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     video_path = '/home/liuchaolei/MVSC/src/test.mp4'
-    model_path: str = "THUDM/cogvlm2-llama3-caption"
+    model_path = "THUDM/cogvlm2-llama3-caption"
     caption = generate_text(video_path=video_path, model_path=model_path, device=device)
     print(caption)
 
