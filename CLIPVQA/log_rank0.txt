@@ -1,0 +1,48 @@
+[2025-06-22 16:05:51 ViT-B/32] (main.py 341): INFO working dir: /home/liuchaolei/MVSC_ref/CLIPVQA
+[2025-06-22 16:06:17 ViT-B/32] (main.py 341): INFO working dir: /home/liuchaolei/MVSC_ref/CLIPVQA
+[2025-06-22 16:30:11 ViT-B/32] (main.py 341): INFO working dir: /home/liuchaolei/MVSC_ref/CLIPVQA
+[2025-06-22 16:31:19 ViT-B/32] (main.py 341): INFO working dir: /home/liuchaolei/MVSC_ref/CLIPVQA
+[2025-06-22 16:31:19 ViT-B/32] (main.py 345): INFO AUG:
+  COLOR_JITTER: 0.8
+  CUTMIX: 1.0
+  GRAY_SCALE: 0.2
+  LABEL_SMOOTH: 0.1
+  MIXUP: 0.8
+  MIXUP_SWITCH_PROB: 0.5
+BASE: ['']
+DATA:
+  DATASET: kinetics400
+  INPUT_SIZE: 224
+  LABEL_LIST: /home/liuchaolei/MVSC_ref/CLIPVQA/VideoX/X-CLIP/labels/kinetics_400_labels.csv
+  NUM_CLASSES: 6
+  NUM_FRAMES: 16
+  ROOT: /data/ssd/liuchaolei/video_datasets/KoNViD_1k_videos
+  TRAIN_FILE: /home/liuchaolei/MVSC_ref/CLIPVQA/dataset_csv/kon1kcsv/train.csv
+  VAL_FILE: /home/liuchaolei/MVSC_ref/CLIPVQA/dataset_csv/kon1kcsv/test.csv
+LOCAL_RANK: 0
+MODEL:
+  ARCH: ViT-B/32
+  DROP_PATH_RATE: 0.0
+  FIX_TEXT: True
+  PRETRAINED: None
+  RESUME: /home/liuchaolei/MVSC_ref/CLIPVQA/k400_32_8.pth
+OUTPUT: /home/liuchaolei/MVSC_ref/CLIPVQA
+PRINT_FREQ: 50
+SAVE_FREQ: 1
+SEED: 1024
+TEST:
+  NUM_CLIP: 1
+  NUM_CROP: 1
+  ONLY_TEST: True
+TRAIN:
+  ACCUMULATION_STEPS: 1
+  AUTO_RESUME: False
+  BATCH_SIZE: 3
+  EPOCHS: 40
+  LR: 8e-06
+  LR_SCHEDULER: cosine
+  OPTIMIZER: adamw
+  OPT_LEVEL: O1
+  USE_CHECKPOINT: False
+  WARMUP_EPOCHS: 5
+  WEIGHT_DECAY: 0.001

@@ -89,7 +89,7 @@ loss_fn = lpips.LPIPS(net='alex', spatial=spatial) # Can also set net = 'squeeze
 
 def calculate_lpips(img1, img2, device):
     loss_fn.to(device)
-    return loss_fn.forward(org_rgb, rec_frame).mean()
+    return loss_fn.forward(img1, img2).mean()
 
 def main():
     NUMBER_OF_VIDEOS = 8

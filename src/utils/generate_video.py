@@ -38,8 +38,8 @@ from diffusers import (
 )
 from diffusers.utils import export_to_video, load_image, load_video
 
-from loading_utils import load_image_sequence
-from format_utils import tensor_to_pil, pil_to_tensor
+from .loading_utils import load_image_sequence
+from .format_utils import tensor_to_pil, pil_to_tensor
 
 logging.basicConfig(level=logging.INFO)
 

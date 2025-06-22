@@ -27,7 +27,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# CUDA_VISIBLE_DEVICES=3 python3 src/eval_model.py pretrained /data/ssd/liuchaolei/tmpvideo /home/liuchaolei/MVSC/results -a ssf2020 -q 1 --v2v_model /data/ssd/liuchaolei/models/CogVideoX-5B controlnet_path /data/ssd/liuchaolei/models/Flux.1-dev-Controlnet-Upscaler basenet_path /data/ssd/liuchaolei/models/FLUX.1-dev
+# CUDA_VISIBLE_DEVICES=4 python3 src/eval_model.py pretrained /data/ssd/liuchaolei/video_datasets/UVG/yuv /data/ssd/liuchaolei/results/baseline/ssf2020 -a ssf2020 -q 1,2,3,4,5,6,7,8 --v2v_model /data/ssd/liuchaolei/models/CogVideoX-5B --controlnet_path /data/ssd/liuchaolei/models/Flux.1-dev-Controlnet-Upscaler --basenet_path /data/ssd/liuchaolei/models/FLUX.1-dev
 
 import argparse
 import json
@@ -70,6 +70,7 @@ from utils.format_utils import pil_to_tensor, tensor_to_pil
 from torchvision import transforms
 import torchvision.utils as vutils
 from metrics.calculate_lpips import calculate_lpips
+from metrics.calculate_fvd import calculate_fvd
 
 models = {"ssf2020": ScaleSpaceFlow}
 
@@ -268,8 +269,8 @@ def eval_model(net: nn.Module, sequence: Path, binpath: Path, outputdir: str, qu
 
 
     ######################## video caption: caption ########################
-    video_path = '/data/ssd/liuchaolei/results/MVSC/ori_videos_mp4/UVG/' + sequence.stem +'.mp4'
-    caption = generate_text(model_path=args["v2t_model"], video_path=video_path, device=device)
+    # video_path = '/data/ssd/liuchaolei/results/MVSC/ori_videos_mp4/UVG/' + sequence.stem +'.mp4'
+    # caption = generate_text(model_path=args["v2t_model"], video_path=video_path, device=device)
 
 
     ######################## video compression: rec_output, x_recs ########################
@@ -309,29 +310,29 @@ def eval_model(net: nn.Module, sequence: Path, binpath: Path, outputdir: str, qu
     # ###############################################################
 
     ######################## Image Enhancement: enhance_output_path, enhance_image [T, C, H, W] ########################
-    enhance_images = [] # [T, C, H, W]
+    # enhance_images = [] # [T, C, H, W]
 
-    for i in range(len(x_recs)):
+    # for i in range(len(x_recs)):
         
-        enhance_image = generate_image(prompt=caption, controlnet_path=args["controlnet_path"], basenet_path=args["basenet_path"], output_path=enhance_output_path, image=x_recs[i], num_inference_steps=args["num_inference_steps"], device=device)
-        enhance_image = pil_to_tensor(enhance_image, device)
-        enhance_image = enhance_image.unsqueeze(0)
-        enhance_images.append(enhance_image)
+    #     enhance_image = generate_image(prompt=caption, controlnet_path=args["controlnet_path"], basenet_path=args["basenet_path"], output_path=enhance_output_path, image=x_recs[i], num_inference_steps=args["num_inference_steps"], device=device)
+    #     enhance_image = pil_to_tensor(enhance_image, device)
+    #     enhance_image = enhance_image.unsqueeze(0)
+    #     enhance_images.append(enhance_image)
     ###############################################################
 
     size = x_rec.shape[2] * x_rec.shape[3]
     # crop and save x_recs/enhance_images
-    rec_output_dir = f"{outputdir}/rec_images/UVG/{quality}/{sequence.stem}"
-    Path(rec_output_dir).mkdir(parents=True, exist_ok=True)
-    enhance_output_dir = f"{outputdir}/enhance_images/UVG/{quality}/{sequence.stem}"
-    Path(enhance_output_dir).mkdir(parents=True, exist_ok=True)
+    # rec_output_dir = f"{outputdir}/rec_images/UVG/{quality}/{sequence.stem}"
+    # Path(rec_output_dir).mkdir(parents=True, exist_ok=True)
+    # enhance_output_dir = f"{outputdir}/enhance_images/UVG/{quality}/{sequence.stem}"
+    # Path(enhance_output_dir).mkdir(parents=True, exist_ok=True)
     for i in range(len(x_recs)):
         x_recs[i] = crop(x_recs[i], padding)
-        enhance_images[i] = crop(enhance_images[i], padding)
-        rec_output_path = f"{rec_output_dir}/im{i+1:03d}.png"
-        enhance_output_path = f"{enhance_output_dir}/im{i+1:03d}.png"
-        vutils.save_image(x_recs[i], rec_output_path)
-        vutils.save_image(enhance_images[i], enhance_output_path)
+        # enhance_images[i] = crop(enhance_images[i], padding)
+        # rec_output_path = f"{rec_output_dir}/im{i+1:03d}.png"
+        # enhance_output_path = f"{enhance_output_dir}/im{i+1:03d}.png"
+        # vutils.save_image(x_recs[i], rec_output_path)
+        # vutils.save_image(enhance_images[i], enhance_output_path)
         # x_rec_pil = x_rec.cpu().clone()
         # x_rec_pil = x_rec_pil.squeeze(0)
         # x_rec_pil = tensor_to_pil(x_rec_pil)
@@ -349,10 +350,11 @@ def eval_model(net: nn.Module, sequence: Path, binpath: Path, outputdir: str, qu
             for k, v in metrics.items():
                 results[k].append(v)
     else:
-        for i in range(len(enhance_images)):
+        for i in range(len(x_recs)):
             metrics = compute_metrics_for_frame(
                 org_seq[i],
-                enhance_images[i],
+                # enhance_images[i],
+                x_recs[i],
                 device,
                 max_val,
             )
@@ -368,6 +370,7 @@ def eval_model(net: nn.Module, sequence: Path, binpath: Path, outputdir: str, qu
         float(filesize(binpath)) * 8 * org_seq.framerate / (num_frames * 1000)
     )
 
+    caption=""
     if enhance_video is not None:
         seq_results["bpp"] = (
             (float(filesize(binpath)) + sys.getsizeof(caption)) * 8 / (num_frames * size)
@@ -383,7 +386,7 @@ def eval_model(net: nn.Module, sequence: Path, binpath: Path, outputdir: str, qu
     for k, v in seq_results.items():
         if isinstance(v, torch.Tensor):
             seq_results[k] = v.item()
-    return seq_results
+    return seq_results, x_recs
 
 
 @torch.no_grad()
@@ -437,7 +440,7 @@ def run_inference(
     inputdir: Path,
     net: nn.Module,
     outputdir: Path,
-    quality: str = ""
+    quality: str = "",
     force: bool = False,
     entropy_estimation: bool = False,
     trained_net: str = "",
@@ -465,7 +468,11 @@ def run_inference(
                     metrics = eval_model_entropy_estimation(net, filepath)
                 else:
                     sequence_bin = sequence_metrics_path.with_suffix(".bin")
-                    metrics = eval_model(net, filepath, sequence_bin, outputdir, quality, **args)
+                    metrics, x_recs = eval_model(net, filepath, sequence_bin, outputdir, quality, **args)
+                # # calculation fvd
+                # org_seq = RawVideoSequence.from_file(filepath)
+                # seq_results["fvd"] = calculate_fvd(org_seq, x_recs, device)
+
         with sequence_metrics_path.open("wb") as f:
             output = {
                 "source": filepath.stem,
