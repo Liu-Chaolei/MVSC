@@ -28,6 +28,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # python -m debugpy --wait-for-client --listen 5678 -m src.train -d /data/ssd/liuchaolei/video_datasets/vimeo_septuplet
+# python src.train.py -d /data/ssd/liuchaolei/video_datasets/vimeo_septuplet
 
 import argparse
 import math
@@ -252,7 +253,7 @@ def configure_optimizers(net, args):
 
 
 def train_one_epoch(
-    model, criterion, train_dataloader, optimizer, aux_optimizer, epoch, clip_max_norm, v2t_model, v2v_model, audio_emb_model, num_inference_steps
+    model, criterion, train_dataloader, optimizer, aux_optimizer, epoch, clip_max_norm, v2t_model, v2v_model, controlnet_path, basenet_path, audio_emb_model, num_inference_steps
 ):
     model.train()
     device = next(model.parameters()).device
@@ -270,13 +271,25 @@ def train_one_epoch(
         ######################## video compression: rec_frames ########################
         rec_frames = model(d) # frames[B, C, H, W]
 
-        ######################## Video Enhancement: enhance_videos ########################
-        enhance_videos = generate_video(captions, v2t_model, v2v_model, image_or_video=rec_frames, num_inference_steps=num_inference_steps) # [B, C, T, H, W]
+        # ######################## Video Enhancement: enhance_videos ########################
+        # enhance_videos = generate_video(captions, v2t_model, v2v_model, image_or_video=rec_frames, num_inference_steps=num_inference_steps) # [B, C, T, H, W]
 
-        split_tensors = torch.chunk(enhance_videos, chunks=3, dim=2)
-        split_tensors = [t.squeeze(2) for t in split_tensors]
+        # split_tensors = torch.chunk(enhance_videos, chunks=3, dim=2)
+        # split_tensors = [t.squeeze(2) for t in split_tensors]
 
-        enhance_videos = {str(i): t for i, t in enumerate(split_tensors)} # frames[B, C, H, W]
+        # enhance_videos = {str(i): t for i, t in enumerate(split_tensors)} # frames[B, C, H, W]
+        # ###############################################################
+
+        ######################## Image Enhancement: enhance_output_path, enhance_image [T, C, H, W] ########################
+        enhance_images = [] # [T, C, H, W]
+        enhance_output_dir = f"{outputdir}/enhance_images/UVG/{quality}/{sequence.stem}"
+        Path(enhance_output_dir).mkdir(parents=True, exist_ok=True)
+        for i in range(len(x_recs)):
+            x_rec = x_recs[i]
+            enhance_output_path = f"{enhance_output_dir}/im{i+1:03d}.png"
+            enhance_image = generate_image(prompt=caption, controlnet_path=args["controlnet_path"], basenet_path=args["basenet_path"], output_path=enhance_output_path, image=x_rec, num_inference_steps=args["num_inference_steps"])
+            enhance_images.append(enhance_image)
+        ###############################################################
 
         ######################## Get audio_emb ########################
         if audio_emb_model == 'wav2clip':
@@ -435,6 +448,16 @@ def parse_args(argv):
         type=str,
         default="THUDM/cogvlm2-llama3-caption",
         help="reconstructed video directory")
+    parent_parser.add_argument(
+        "--controlnet_path",
+        type=str,
+        default="jasperai/Flux.1-dev-Controlnet-Upscaler",
+        help="reconstructed video directory")
+    parent_parser.add_argument(
+        "--basenet_path",
+        type=str,
+        default="black-forest-labs/FLUX.1-dev",
+        help="reconstructed video directory")
     parser.add_argument("--num_inference_steps", type=int, default=50)
     parser.add_argument("--checkpoint", type=str, help="Path to a checkpoint")
     args = parser.parse_args(argv)
@@ -529,6 +552,8 @@ def main(argv):
             args.clip_max_norm,
             args.v2t_model,
             args.v2v_model,
+            args.controlnet_path,
+            args.basenet_path,
             args.num_inference_steps
         )
         loss = test_epoch(epoch, test_dataloader, net, criterion)

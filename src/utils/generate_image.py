@@ -24,7 +24,7 @@ pipe.load_lora_weights("/data/ssd/liuchaolei/models/OmniConsistency/LoRAs",
                        weight_name="lora_name.safetensors")
 
 image_path1 = "/data/ssd/liuchaolei/video_datasets/UVG/sequences/Beauty/im001.png"
-prompt = "A woman with blonde hair and green eyes is featured against a black background, her makeup accentuated by smoky eyeshadow and bold red lipstick. She wears simple stud earrings and a black top, exuding confidence and allure. As time passes, her expression shifts to one of serene confidence, with her gaze directed away, suggesting introspection. The lighting softly highlights her features, maintaining a warm ambiance. Her look is consistent, with the addition of subtle pink lipstick, and her hair appears windswept, adding dynamism to her poised demeanor.'
+prompt = "A woman with blonde hair and green eyes is featured against a black background, her makeup accentuated by smoky eyeshadow and bold red lipstick. She wears simple stud earrings and a black top, exuding confidence and allure. As time passes, her expression shifts to one of serene confidence, with her gaze directed away, suggesting introspection. The lighting softly highlights her features, maintaining a warm ambiance. Her look is consistent, with the addition of subtle pink lipstick, and her hair appears windswept, adding dynamism to her poised demeanor."
 
 subject_images = []
 spatial_image = [Image.open(image_path1).convert("RGB")]

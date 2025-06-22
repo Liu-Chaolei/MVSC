@@ -39,7 +39,7 @@ from diffusers import (
 from diffusers.utils import export_to_video, load_image, load_video
 
 from loading_utils import load_image_sequence
-from format_utils import toPIL, to_Tensor
+from format_utils import tensor_to_pil, pil_to_tensor
 
 logging.basicConfig(level=logging.INFO)
 
@@ -140,7 +140,7 @@ def generate_video(
                 raise NotImplementedError(f"Unsupported video input format, only support mp4 or image sequence")
             videos = [video]
         elif image_or_video and image_or_video_path is None:
-            videos = toPIL(image_or_video) # [B, T]:PIL images, a list of PIL Image
+            videos = tensor_to_pil(image_or_video) # [B, T]:PIL images, a list of PIL Image
         else:
             raise Exception("Invalid Video Input")
 
@@ -221,7 +221,7 @@ def generate_video(
     if output_path:
         export_to_video(video_generate, output_path, fps=fps)
 
-    video_tensors = to_Tensor(video_generates)
+    video_tensors = pil_to_tensor(video_generates)
     return video_tensors
 
 # CUDA_VISIBLE_DEVICES=0 python src/utils/generate_video.py

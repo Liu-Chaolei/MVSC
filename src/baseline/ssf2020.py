@@ -27,8 +27,8 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# python3 src/baseline/ssf2020.py pretrained /data/ssd/liuchaolei/video_datasets/UVG/yuv_crop /data/ssd/liuchaolei/results/MVSC -a ssf2020 -q 6
-
+# python3 src/baseline/ssf2020.py pretrained /data/ssd/liuchaolei/video_datasets/UVG/yuv /data/ssd/liuchaolei/results/MVSC -a ssf2020 -q 1,2,3,4,5,6,7,8
+# python3 src/baseline/ssf2020.py checkpoint /data/ssd/liuchaolei/video_datasets/UVG/yuv /data/ssd/liuchaolei/results/MVSC -a ssf2020 -p /home/liuchaolei/.cache/torch/hub/checkpoints/ssf2020-mse-1-c1ac1a47.pth.tar
 import argparse
 import json
 import math

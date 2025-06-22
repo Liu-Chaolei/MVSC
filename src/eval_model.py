@@ -27,7 +27,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# python3 src/eval_model.py pretrained /data/ssd/liuchaolei/tmpvideo /home/liuchaolei/MVSC/results -a ssf2020 -q 1
+# CUDA_VISIBLE_DEVICES=3 python3 src/eval_model.py pretrained /data/ssd/liuchaolei/tmpvideo /home/liuchaolei/MVSC/results -a ssf2020 -q 1 --v2v_model /data/ssd/liuchaolei/models/CogVideoX-5B controlnet_path /data/ssd/liuchaolei/models/Flux.1-dev-Controlnet-Upscaler basenet_path /data/ssd/liuchaolei/models/FLUX.1-dev
 
 import argparse
 import json
@@ -64,7 +64,12 @@ from compressai.zoo import video_models as pretrained_models
 
 from utils.generate_text import generate_text
 from utils.generate_video import generate_video
+from utils.generate_image2 import generate_image
+from utils.format_utils import pil_to_tensor, tensor_to_pil
 
+from torchvision import transforms
+import torchvision.utils as vutils
+from metrics.calculate_lpips import calculate_lpips
 
 models = {"ssf2020": ScaleSpaceFlow}
 
@@ -164,7 +169,10 @@ def compute_metrics_for_frame(
     psnr_rgb = 20 * np.log10(max_val) - 10 * torch.log10(mse_rgb)
 
     ms_ssim_rgb = ms_ssim(org_rgb, rec_frame, data_range=max_val)
-    out.update({"ms-ssim-rgb": ms_ssim_rgb, "mse-rgb": mse_rgb, "psnr-rgb": psnr_rgb})
+
+    lpips_rgb = calculate_lpips(org_rgb, rec_frame, device)
+
+    out.update({"ms-ssim-rgb": ms_ssim_rgb, "mse-rgb": mse_rgb, "psnr-rgb": psnr_rgb, "lpips_rgb": lpips_rgb})
 
     return out
 
@@ -237,9 +245,7 @@ def write_body(fd, shape, out_strings):
 
 
 @torch.no_grad()
-def eval_model(
-    net: nn.Module, sequence: Path, binpath: Path, v2t_model: str, v2v_model: str, controlnet_path: str, basenet_path: str, outputdir: str, num_inference_steps: int, keep_binaries: bool = False
-) -> Dict[str, Any]:
+def eval_model(net: nn.Module, sequence: Path, binpath: Path, outputdir: str, quality: str, **args: Any) -> Dict[str, Any]:
     org_seq = RawVideoSequence.from_file(str(sequence))
 
     if org_seq.format != VideoFormat.YUV420:
@@ -261,14 +267,9 @@ def eval_model(
     write_uints(f, (num_frames,))
 
 
-    # 初始化视频写入器
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    writer = None
-    all_frames = []  # 可选：内存足够时可预存所有帧
-
     ######################## video caption: caption ########################
     video_path = '/data/ssd/liuchaolei/results/MVSC/ori_videos_mp4/UVG/' + sequence.stem +'.mp4'
-    caption = generate_text(model_path=v2t_model, video_path=video_path, device=device)
+    caption = generate_text(model_path=args["v2t_model"], video_path=video_path, device=device)
 
 
     ######################## video compression: rec_output, x_recs ########################
@@ -292,56 +293,56 @@ def eval_model(
 
             x_rec = x_rec.clamp(0, 1)
 
-            ######################## save the x_rec to a mp4 video########################
-            # # 1. 裁剪填充区域
-            # x_rec_cropped = crop(x_rec, padding)  # [C, H, W]
-            # all_frames.append(x_rec_cropped) # save the original reconstructed frames
-            # # 2. 转换张量到CPU和numpy格式
-            # frame_np = x_rec_cropped.squeeze(0).cpu().numpy()  # 移除batch维度
-            # frame_np = np.transpose(frame_np, (1, 2, 0))       # CHW -> HWC
-            # # 3. 转换像素范围到[0,255]并转为uint8
-            # frame_np = (frame_np * 255).clip(0, 255).astype(np.uint8)
-            # # 4. RGB转BGR（OpenCV要求）
-            # frame_bgr = cv2.cvtColor(frame_np, cv2.COLOR_RGB2BGR)
-            # # 5. 初始化或写入视频
-            # rec_output = os.path.join(outputdir, 'rec_videos')
-            # if writer is None:
-            #     h, w = frame_bgr.shape[:2]
-            #     writer = cv2.VideoWriter(rec_output, fourcc, fps, (w, h), isColor=True)
-            # writer.write(frame_bgr)
-            ######################## save the x_rec to a list########################
+            ######################## save the x_rec to a list ########################
             x_recs.append(x_rec) # [T, C, H, W]
 
-
             pbar.update(1)
-    # # 释放资源
-    # if writer is not None:
-    #     writer.release()
+
     f.close()
 
     # ######################## Video Enhancement: enhance_output_path, enhance_video [T, C, H, W] ########################
+    enhance_video = None
     # enhance_output_path = os.path.join(outputdir, 'enhance_videos')
-    # enhance_video = generate_video(caption, model_path=v2v_model, output_path=enhance_output_path, image_or_video=x_recs, num_inference_steps=num_inference_steps)
+    # enhance_video = generate_video(caption, model_path=args["v2v_model"], output_path=enhance_output_path, image_or_video=x_recs, num_inference_steps=args["num_inference_steps"])
     # enhance_video = enhance_video.squeeze(0)
     # enhance_video = enhance_video.transpose(0, 1)
     # ###############################################################
 
     ######################## Image Enhancement: enhance_output_path, enhance_image [T, C, H, W] ########################
     enhance_images = [] # [T, C, H, W]
+
     for i in range(len(x_recs)):
-        x_rec = x_recs[i]
-        enhance_output_path = f"{outputdir}/enhance_images/{i:03d}.png"
-        enhance_image = generate_video(prompt=caption, controlnet_path=controlnet_path, basenet_path=basenet_path, output_path=enhance_output_path, image=x_rec, num_inference_steps=num_inference_steps)
+        
+        enhance_image = generate_image(prompt=caption, controlnet_path=args["controlnet_path"], basenet_path=args["basenet_path"], output_path=enhance_output_path, image=x_recs[i], num_inference_steps=args["num_inference_steps"], device=device)
+        enhance_image = pil_to_tensor(enhance_image, device)
+        enhance_image = enhance_image.unsqueeze(0)
         enhance_images.append(enhance_image)
     ###############################################################
+
+    size = x_rec.shape[2] * x_rec.shape[3]
+    # crop and save x_recs/enhance_images
+    rec_output_dir = f"{outputdir}/rec_images/UVG/{quality}/{sequence.stem}"
+    Path(rec_output_dir).mkdir(parents=True, exist_ok=True)
+    enhance_output_dir = f"{outputdir}/enhance_images/UVG/{quality}/{sequence.stem}"
+    Path(enhance_output_dir).mkdir(parents=True, exist_ok=True)
+    for i in range(len(x_recs)):
+        x_recs[i] = crop(x_recs[i], padding)
+        enhance_images[i] = crop(enhance_images[i], padding)
+        rec_output_path = f"{rec_output_dir}/im{i+1:03d}.png"
+        enhance_output_path = f"{enhance_output_dir}/im{i+1:03d}.png"
+        vutils.save_image(x_recs[i], rec_output_path)
+        vutils.save_image(enhance_images[i], enhance_output_path)
+        # x_rec_pil = x_rec.cpu().clone()
+        # x_rec_pil = x_rec_pil.squeeze(0)
+        # x_rec_pil = tensor_to_pil(x_rec_pil)
+        # x_rec_pil.save(output_path)
 
     ####################################### calculate metrics #######################################
     if enhance_video is not None:
         for i in range(enhance_video.shape(0)):
-            enhance_frame = enhance_video[i]
             metrics = compute_metrics_for_frame(
                 org_seq[i],
-                crop(enhance_frame, padding),
+                enhance_video[i],
                 device,
                 max_val,
             )
@@ -351,7 +352,7 @@ def eval_model(
         for i in range(len(enhance_images)):
             metrics = compute_metrics_for_frame(
                 org_seq[i],
-                crop(enhance_images[i], padding),
+                enhance_images[i],
                 device,
                 max_val,
             )
@@ -367,11 +368,16 @@ def eval_model(
         float(filesize(binpath)) * 8 * org_seq.framerate / (num_frames * 1000)
     )
 
-    seq_results["bpp"] = (
-        (float(filesize(binpath)) + sys.getsizeof(caption)) * 8 / (num_frames * enhance_video.shape(2) * enhance_video.shape(3))
-    )
+    if enhance_video is not None:
+        seq_results["bpp"] = (
+            (float(filesize(binpath)) + sys.getsizeof(caption)) * 8 / (num_frames * size)
+        )
+    else:
+        seq_results["bpp"] = (
+            (float(filesize(binpath)) + sys.getsizeof(caption)) * 8 / (num_frames * size)
+        )
 
-    if not keep_binaries:
+    if not args["keep_binaries"]:
         binpath.unlink()
 
     for k, v in seq_results.items():
@@ -431,6 +437,7 @@ def run_inference(
     inputdir: Path,
     net: nn.Module,
     outputdir: Path,
+    quality: str = ""
     force: bool = False,
     entropy_estimation: bool = False,
     trained_net: str = "",
@@ -458,9 +465,7 @@ def run_inference(
                     metrics = eval_model_entropy_estimation(net, filepath)
                 else:
                     sequence_bin = sequence_metrics_path.with_suffix(".bin")
-                    metrics = eval_model(
-                        net, filepath, sequence_bin, args["v2t_model"], args["v2v_model"], args["controlnet_path"], args["basenet_path"], outputdir, args["num_inference_steps"], args["keep_binaries"]
-                    )
+                    metrics = eval_model(net, filepath, sequence_bin, outputdir, quality, **args)
         with sequence_metrics_path.open("wb") as f:
             output = {
                 "source": filepath.stem,
@@ -616,6 +621,13 @@ def create_parser() -> argparse.ArgumentParser:
 #     return args
 
 
+# def readyaml(path):
+#     with open(path, 'r', encoding='utf-8') as f:
+#         data = f.read()
+#         config = yaml.load(data, Loader=yaml.FullLoader)
+#     return config
+
+
 def main(args: Any = None) -> None:
     if args is None:
         args = sys.argv[1:]
@@ -657,8 +669,10 @@ def main(args: Any = None) -> None:
             sys.stderr.flush()
         model = load_func(*opts, run)
         if args.source == "pretrained":
+            quality = str(run)
             trained_net = f"{args.architecture}-{args.metric}-{run}-{description}"
         else:
+            quality = run.split("-")[2]
             cpt_name = Path(run).name[: -len(".tar.pth")]  # removesuffix() python3.9
             trained_net = f"{cpt_name}-{description}"
         print(f"Using trained model {trained_net}", file=sys.stderr)
@@ -672,6 +686,7 @@ def main(args: Any = None) -> None:
             args.dataset,
             model,
             outputdir,
+            quality,
             trained_net=trained_net,
             description=description,
             **args_dict,
